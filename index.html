@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>MedCore — Mission Control</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&family=DM+Sans:wght@300;400;500&display=swap');
+:root{
+  --bg:#020509;--panel:rgba(8,18,32,.93);--glass:rgba(10,24,44,.65);
+  --cyan:#00e5ff;--cdim:rgba(0,229,255,.15);--cglow:rgba(0,229,255,.4);
+  --green:#00ff9d;--gdim:rgba(0,255,157,.12);
+  --amber:#ffb800;--adim:rgba(255,184,0,.15);
+  --red:#ff2d55;--rdim:rgba(255,45,85,.15);--rglow:rgba(255,45,85,.5);
+  --purple:#bf5fff;--pdim:rgba(191,95,255,.12);
+  --tp:#e8f4ff;--tm:#4a7090;--td:#2a4560;
+  --bdr:rgba(0,229,255,.08);--bda:rgba(0,229,255,.25);
+  --mono:'Share Tech Mono',monospace;--disp:'Exo 2',sans-serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--tp);font-family:var(--body);
+  background-image:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(0,60,100,.22) 0%,transparent 70%);
+}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);}
+
+/* ── ROLE SCREEN ── */
+#role-screen{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(0,60,120,.3) 0%,transparent 70%);}
+.rl-logo{font-family:var(--disp);font-weight:900;font-size:22px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;text-shadow:0 0 30px var(--cglow);margin-bottom:4px;text-align:center;}
+.rl-sub{font-family:var(--mono);font-size:11px;color:var(--tm);margin-bottom:36px;text-align:center;letter-spacing:1px;}
+.rl-cards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:0 16px;}
+.rl-card{width:180px;padding:24px 18px;cursor:pointer;background:var(--panel);border:1px solid var(--bda);border-radius:6px;transition:all .25s ease;position:relative;overflow:hidden;text-align:left;}
+.rl-card:hover{transform:translateY(-4px);box-shadow:0 0 24px rgba(0,229,255,.15);}
+.rl-card.hosp:hover{border-color:var(--cyan);}
+.rl-card.driv:hover{border-color:var(--amber);box-shadow:0 0 24px rgba(255,184,0,.15);}
+.rl-card.clin:hover{border-color:var(--green);box-shadow:0 0 24px rgba(0,255,157,.15);}
+.rl-icon{font-size:32px;margin-bottom:12px;display:block;}
+.rl-name{font-family:var(--disp);font-weight:700;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
+.rl-desc{font-family:var(--mono);font-size:9px;color:var(--tm);line-height:1.6;}
+.rl-badge{display:inline-block;margin-top:10px;padding:2px 7px;border-radius:2px;font-family:var(--mono);font-size:9px;letter-spacing:1px;}
+.rl-port{margin-top:28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;}
+.port-btn{padding:8px 18px;background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3);border-radius:3px;color:var(--amber);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:1px;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.port-btn:hover{background:rgba(255,184,0,.18);box-shadow:0 0 12px rgba(255,184,0,.2);}
+
+/* ── HEADER ── */
+#hdr{position:fixed;top:0;left:0;right:0;z-index:200;height:50px;background:rgba(2,5,9,.97);border-bottom:1px solid var(--bda);display:flex;align-items:center;justify-content:space-between;padding:0 12px;backdrop-filter:blur(20px);}
+.hd-l{display:flex;align-items:center;gap:8px;}
+.hd-logo{font-family:var(--disp);font-weight:900;font-size:13px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase;text-shadow:0 0 14px var(--cglow);}
+.hd-logo s2{color:var(--tm);font-weight:300;}
+.hd-rbadge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;}
+.hd-rbadge.hosp{background:var(--cdim);color:var(--cyan);border:1px solid rgba(0,229,255,.3);}
+.hd-rbadge.driv{background:var(--adim);color:var(--amber);border:1px solid rgba(255,184,0,.3);}
+.hd-rbadge.clin{background:var(--gdim);color:var(--green);border:1px solid rgba(0,255,157,.3);}
+.hd-r{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;}
+#clk{font-family:var(--mono);font-size:11px;color:var(--cyan);white-space:nowrap;}
+.sep{width:1px;height:16px;background:var(--bdr);flex-shrink:0;}
+.hb{background:transparent;border:1px solid var(--bda);color:var(--tm);font-family:var(--mono);font-size:9px;padding:3px 7px;cursor:pointer;border-radius:2px;white-space:nowrap;flex-shrink:0;transition:all .2s;}
+.hb:hover,.hb.on{border-color:var(--cyan);color:var(--cyan);background:var(--cdim);}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:ld 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes ld{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── TABS (hidden - replaced by overlay menu) ── */
+#tabs{position:fixed;top:50px;left:0;right:0;z-index:199;background:rgba(2,5,9,.95);border-bottom:1px solid var(--bdr);display:flex;backdrop-filter:blur(12px);}
+.tab{flex:1;padding:8px 2px;text-align:center;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:var(--tm);border-bottom:2px solid transparent;transition:all .2s;position:relative;}
+.tab:hover{color:var(--tp);}
+.tab.on{color:var(--cyan);border-bottom-color:var(--cyan);}
+.tab.don.on{color:var(--amber);border-bottom-color:var(--amber);}
+.tab.con.on{color:var(--green);border-bottom-color:var(--green);}
+.tnot{position:absolute;top:4px;right:calc(50% - 20px);background:var(--red);color:#fff;border-radius:7px;font-size:7px;padding:1px 4px;min-width:12px;text-align:center;font-family:var(--mono);display:none;}
+.tnot.s{display:block;}
+
+/* ── NAV MENU OVERLAY ── */
+#nav-menu{
+  position:fixed;inset:0;z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(2,5,9,.82);
+  backdrop-filter:blur(22px) saturate(1.4);
+  -webkit-backdrop-filter:blur(22px) saturate(1.4);
+  opacity:0;pointer-events:none;
+  transition:opacity .28s ease;
+}
+#nav-menu.open{opacity:1;pointer-events:all;}
+.nm-header{
+  font-family:var(--disp);font-weight:900;font-size:13px;
+  letter-spacing:3px;text-transform:uppercase;
+  color:var(--tm);margin-bottom:28px;text-align:center;
+}
+.nm-header strong{color:var(--cyan);text-shadow:0 0 18px var(--cglow);}
+.nm-grid{
+  display:flex;flex-direction:column;gap:10px;
+  width:min(340px,88vw);
+}
+.nm-btn{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;
+  background:rgba(8,18,32,.7);
+  border:1px solid var(--bdr);
+  border-radius:6px;
+  cursor:pointer;
+  transition:all .2s ease;
+  position:relative;overflow:hidden;
+  text-align:left;
+  animation:nmbtn .22s ease-out both;
+}
+.nm-btn::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  transition:opacity .25s;
+  background:radial-gradient(ellipse at left center,rgba(0,229,255,.07) 0%,transparent 70%);
+}
+.nm-btn:hover{transform:translateX(4px);border-color:var(--bda);background:rgba(8,18,42,.85);}
+.nm-btn:hover::before{opacity:1;}
+.nm-btn.active-tab{border-color:var(--bda);background:rgba(0,229,255,.08);}
+.nm-btn.active-tab .nm-btn-name{color:var(--cyan);}
+.nm-btn.drv-tab:hover{border-color:rgba(255,184,0,.35);}
+.nm-btn.drv-tab.active-tab{border-color:rgba(255,184,0,.3);background:rgba(255,184,0,.06);}
+.nm-btn.drv-tab.active-tab .nm-btn-name{color:var(--amber);}
+.nm-btn.clin-tab:hover{border-color:rgba(0,255,157,.3);}
+.nm-btn.clin-tab.active-tab{border-color:rgba(0,255,157,.25);background:rgba(0,255,157,.05);}
+.nm-btn.clin-tab.active-tab .nm-btn-name{color:var(--green);}
+.nm-btn-icon{font-size:22px;flex-shrink:0;width:30px;text-align:center;}
+.nm-btn-info{flex:1;}
+.nm-btn-name{
+  font-family:var(--disp);font-weight:700;font-size:13px;
+  letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--tp);margin-bottom:2px;
+}
+.nm-btn-desc{font-family:var(--mono);font-size:9px;color:var(--tm);line-height:1.4;}
+.nm-btn-badge{
+  font-family:var(--mono);font-size:8px;padding:2px 6px;
+  border-radius:2px;flex-shrink:0;
+}
+.nm-unread{background:var(--red);color:#fff;border-radius:8px;font-size:8px;padding:2px 5px;flex-shrink:0;}
+.nm-footer{
+  margin-top:22px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;
+}
+.nm-close{
+  padding:8px 22px;background:transparent;border:1px solid var(--bda);
+  border-radius:3px;color:var(--tm);font-family:var(--mono);font-size:10px;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.nm-close:hover{border-color:var(--red);color:var(--red);}
+.nm-home{
+  padding:8px 16px;background:rgba(8,18,32,.6);border:1px solid var(--bdr);
+  border-radius:3px;color:var(--tm);font-family:var(--mono);font-size:10px;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.nm-home:hover{border-color:var(--amber);color:var(--amber);}
+.nm-role-sw{
+  padding:8px 16px;background:var(--cdim);border:1px solid rgba(0,229,255,.3);
+  border-radius:3px;color:var(--cyan);font-family:var(--mono);font-size:10px;
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.nm-role-sw:hover{background:rgba(0,229,255,.22);}
+@keyframes nmbtn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:none;}}
+
+/* ── MENU TRIGGER BUTTON ── */
+#mnubtn{
+  padding:4px 10px;background:var(--cdim);border:1px solid rgba(0,229,255,.3);
+  color:var(--cyan);font-family:var(--mono);font-size:10px;
+  cursor:pointer;border-radius:3px;transition:all .2s;
+  white-space:nowrap;flex-shrink:0;letter-spacing:.5px;
+}
+#mnubtn:hover{background:rgba(0,229,255,.22);box-shadow:0 0 10px rgba(0,229,255,.2);}
+
+/* ── HIDE OLD TABS STRIP ── */
+#tabs{display:none !important;}
+/* adjust main top since tabs are gone */
+#main{top:54px!important;}
+
+/* ── MAIN ── */
+#main{position:fixed;top:88px;left:0;right:0;bottom:36px;overflow-y:auto;overflow-x:hidden;z-index:1;padding:10px;}
+
+/* ── PANELS ── */
+.pnl{background:var(--panel);border:1px solid var(--bdr);border-radius:4px;overflow:hidden;margin-bottom:9px;transition:border-color .3s;}
+.pnl:hover{border-color:var(--bda);}
+.ph{padding:8px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:rgba(0,229,255,.02);}
+.pt{font-family:var(--disp);font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);}
+.pt.a{color:var(--amber);}.pt.g{color:var(--green);}
+.ps{font-family:var(--mono);font-size:9px;color:var(--tm);}
+.pb{padding:11px 12px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr;}}
+
+/* ── ALERTS ── */
+.astrip{display:flex;gap:6px;flex-wrap:wrap;min-height:24px;align-items:center;}
+.achip{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:2px;border:1px solid;white-space:nowrap;animation:cin .3s ease-out;}
+@keyframes cin{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+.al{border-color:rgba(0,255,157,.3);color:var(--green);background:var(--gdim);}
+.am{border-color:rgba(255,184,0,.3);color:var(--amber);background:var(--adim);}
+.ah{border-color:rgba(191,95,255,.3);color:var(--purple);background:var(--pdim);}
+.ac{border-color:var(--red);color:var(--red);background:var(--rdim);animation:cfl .55s ease-in-out infinite;box-shadow:0 0 10px var(--rglow);}
+@keyframes cfl{0%,100%{opacity:1;box-shadow:0 0 10px var(--rglow);}50%{opacity:.4;box-shadow:none;}}
+
+/* ── MESSAGING ── */
+.mthread{max-height:340px;overflow-y:auto;padding:6px 0;display:flex;flex-direction:column;gap:7px;}
+.mbub{max-width:85%;padding:8px 11px;border-radius:4px;font-size:12px;line-height:1.5;animation:min .25s ease-out;}
+@keyframes min{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+.mbub.hospital{align-self:flex-end;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.2);border-radius:4px 4px 0 4px;}
+.mbub.driver{align-self:flex-start;background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.2);border-radius:4px 4px 4px 0;}
+.mbub.clinic{align-self:flex-end;background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.18);border-radius:4px 4px 0 4px;}
+.mbub.sys{align-self:center;max-width:100%;background:rgba(191,95,255,.07);border:1px solid rgba(191,95,255,.15);border-radius:4px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--tm);}
+.mmeta{font-family:var(--mono);font-size:9px;color:var(--tm);margin-bottom:2px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.mrole{font-weight:700;}
+.mrole.hospital{color:var(--cyan);}.mrole.driver{color:var(--amber);}.mrole.clinic{color:var(--green);}
+.mfile{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:3px;padding:6px 9px;margin-top:4px;cursor:pointer;transition:background .2s;}
+.mfile:hover{background:rgba(255,255,255,.09);}
+.mficon{font-size:20px;flex-shrink:0;}
+.mfinfo{flex:1;min-width:0;}
+.mfname{font-family:var(--mono);font-size:10px;color:var(--tp);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mfsize{font-family:var(--mono);font-size:9px;color:var(--tm);}
+.mfdl{font-family:var(--mono);font-size:9px;color:var(--cyan);flex-shrink:0;}
+.cbar{display:flex;gap:6px;align-items:flex-end;margin-top:9px;border-top:1px solid var(--bdr);padding-top:9px;}
+.cinp{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--bda);border-radius:3px;padding:7px 9px;color:var(--tp);font-family:var(--body);font-size:12px;resize:none;outline:none;transition:border-color .2s;min-height:36px;max-height:80px;}
+.cinp:focus{border-color:var(--cyan);}
+.cinp.di:focus{border-color:var(--amber);}
+.cinp.ci:focus{border-color:var(--green);}
+.csnd{padding:7px 12px;border-radius:3px;font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s;}
+.csnd.sh{background:var(--cdim);color:var(--cyan);border:1px solid rgba(0,229,255,.3);}
+.csnd.sh:hover{background:rgba(0,229,255,.25);}
+.csnd.sd{background:var(--adim);color:var(--amber);border:1px solid rgba(255,184,0,.3);}
+.csnd.sd:hover{background:rgba(255,184,0,.2);}
+.csnd.sc{background:var(--gdim);color:var(--green);border:1px solid rgba(0,255,157,.3);}
+.csnd.sc:hover{background:rgba(0,255,157,.2);}
+.attbtn{padding:7px 9px;background:transparent;border:1px solid var(--bda);border-radius:3px;color:var(--tm);cursor:pointer;font-size:14px;transition:all .2s;flex-shrink:0;}
+.attbtn:hover{border-color:var(--cyan);color:var(--cyan);}
+#fi{display:none;}
+
+/* ── DISPATCH / CALL ── */
+.dcall{background:var(--glass);border:1px solid var(--bdr);border-radius:4px;padding:12px;margin-bottom:8px;transition:all .3s;position:relative;}
+.dcall:last-child{margin-bottom:0;}
+.dcall.urg{border-color:rgba(255,45,85,.4);box-shadow:0 0 10px rgba(255,45,85,.1);}
+.dcall.enr{border-color:rgba(255,184,0,.4);box-shadow:0 0 10px rgba(255,184,0,.1);}
+.dcall.done{border-color:rgba(0,255,157,.2);opacity:.7;}
+.dch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:8px;}
+.dcid{font-family:var(--mono);font-size:9px;color:var(--tm);}
+.dcpr{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:2px;}
+.p1{background:var(--rdim);color:var(--red);border:1px solid rgba(255,45,85,.3);}
+.p2{background:var(--adim);color:var(--amber);border:1px solid rgba(255,184,0,.3);}
+.p3{background:var(--cdim);color:var(--cyan);border:1px solid rgba(0,229,255,.3);}
+.dcpt{font-size:13px;font-weight:600;margin-bottom:2px;}
+.dcnd{font-family:var(--mono);font-size:10px;color:var(--tm);line-height:1.5;}
+.dcaddr{display:flex;align-items:flex-start;gap:6px;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:3px;padding:7px 9px;margin:7px 0;font-family:var(--mono);font-size:10px;line-height:1.5;}
+.dcaddr-pin{color:var(--amber);flex-shrink:0;font-size:14px;}
+.dcacts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.dca{padding:6px 11px;font-family:var(--mono);font-size:10px;border-radius:2px;cursor:pointer;border:1px solid;transition:all .2s;user-select:none;}
+.dca.acc{color:var(--green);border-color:rgba(0,255,157,.3);background:var(--gdim);}
+.dca.acc:hover{background:rgba(0,255,157,.2);}
+.dca.dec{color:var(--tm);border-color:var(--bdr);background:transparent;}
+.dca.dec:hover{border-color:var(--red);color:var(--red);}
+.dca.enr{color:var(--amber);border-color:rgba(255,184,0,.3);background:var(--adim);}
+.dca.enr:hover{background:rgba(255,184,0,.2);}
+.dca.done{color:var(--cyan);border-color:rgba(0,229,255,.3);background:var(--cdim);}
+.dca.done:hover{background:rgba(0,229,255,.2);}
+.dca.arr{color:var(--green);border-color:rgba(0,255,157,.3);background:var(--gdim);}
+.dprog{height:3px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:8px;overflow:hidden;}
+.dprogf{height:100%;border-radius:2px;background:var(--amber);transition:width 1s ease;}
+.new-disp-blink{animation:newdisp .4s ease-out 3;}
+@keyframes newdisp{0%,100%{box-shadow:0 0 0 transparent;}50%{box-shadow:0 0 16px var(--rglow);}}
+
+/* ── DRIVER STATUS BAR ── */
+#dsb{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:4px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.dsbd{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px rgba(255,184,0,.5);animation:ld 1.5s infinite;flex-shrink:0;}
+.dsbst{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--amber);}
+.dsbun{font-family:var(--mono);font-size:10px;color:var(--tm);}
+
+/* ── CAPACITY ── */
+.cu{margin-bottom:8px;}.cu:last-child{margin-bottom:0;}
+.cur{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.cun{font-family:var(--mono);font-size:10px;color:var(--tm);}
+.cup{font-family:var(--mono);font-size:11px;font-weight:700;}
+.cub{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.cubf{height:100%;border-radius:3px;transition:width 1.5s cubic-bezier(.4,0,.2,1),background 1s;}
+
+/* ── VITALS ── */
+.vrow{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);}
+.vrow:last-child{border-bottom:none;}
+.vl{font-family:var(--mono);font-size:10px;color:var(--tm);}
+.vv{font-family:var(--disp);font-weight:700;font-size:18px;}
+.vu{font-family:var(--mono);font-size:9px;color:var(--tm);text-align:right;}
+#ecgc{width:100%;height:44px;display:block;margin-top:8px;}
+
+/* ── LOG METRICS ── */
+.lm{background:var(--glass);border:1px solid var(--bdr);border-radius:3px;padding:9px 10px;position:relative;overflow:hidden;}
+.lml{font-family:var(--mono);font-size:9px;color:var(--tm);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.lmv{font-family:var(--disp);font-weight:700;font-size:22px;line-height:1;}
+.lmu{font-family:var(--mono);font-size:9px;color:var(--tm);margin-top:2px;}
+.spk{display:flex;align-items:flex-end;gap:2px;height:18px;margin-top:5px;}
+.spc{flex:1;border-radius:1px;min-height:2px;transition:height .8s;}
+
+/* ── MAP ── */
+#mapc{height:280px;border-radius:2px;overflow:hidden;position:relative;background:#020c18;}
+#mapcanvas{width:100%;height:100%;display:block;}
+#mapov{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(2,5,9,.78));padding:5px 9px;font-family:var(--mono);font-size:9px;color:var(--tm);pointer-events:none;}
+.map-net-badge{position:absolute;top:6px;right:6px;font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:2px;pointer-events:none;}
+.map-net-badge.online{background:rgba(0,255,157,.15);color:var(--green);border:1px solid rgba(0,255,157,.3);}
+.map-net-badge.offline{background:rgba(255,184,0,.12);color:var(--amber);border:1px solid rgba(255,184,0,.3);}
+
+/* ── STAT CHIPS ── */
+.sc2{display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap;}
+.scc{background:var(--glass);border:1px solid var(--bdr);border-radius:3px;padding:6px 9px;display:flex;flex-direction:column;align-items:center;gap:1px;flex:1;min-width:56px;}
+.scv{font-family:var(--disp);font-weight:700;font-size:16px;}
+.scl{font-family:var(--mono);font-size:9px;color:var(--tm);}
+
+/* ── PATIENT QUEUE ── */
+.prow{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--bdr);transition:background .2s;}
+.prow:last-child{border-bottom:none;}
+.prow:hover{background:rgba(0,229,255,.03);margin:0 -12px;padding-left:12px;padding-right:12px;}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.r1{background:var(--red);box-shadow:0 0 6px var(--red);animation:pd 1s infinite;}
+.r2{background:var(--amber);}
+.r3{background:var(--cyan);}
+.r4{background:var(--green);}
+.r5{background:var(--tm);}
+@keyframes pd{0%,100%{box-shadow:0 0 6px var(--red);}50%{box-shadow:none;}}
+.pn{font-size:11px;font-weight:500;flex:1;}
+.pst{font-family:var(--mono);font-size:10px;color:var(--tm);}
+.pw{font-family:var(--mono);font-size:10px;color:var(--amber);min-width:30px;text-align:right;}
+
+/* ── AI CARDS ── */
+.aic{background:var(--glass);border:1px solid var(--bdr);border-radius:3px;padding:9px 11px;margin-bottom:7px;transition:border-color .3s;}
+.aic:last-child{margin-bottom:0;}
+.aic.new{border-color:var(--purple);box-shadow:0 0 10px rgba(191,95,255,.2);animation:ain .4s ease-out;}
+@keyframes ain{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+.aich{display:flex;justify-content:space-between;margin-bottom:4px;}
+.aicl{font-family:var(--mono);font-size:9px;color:var(--purple);letter-spacing:1px;text-transform:uppercase;}
+.aicc{font-family:var(--mono);font-size:9px;color:var(--tm);}
+.aica{font-size:11px;font-weight:500;margin-bottom:3px;}
+.aicr{font-family:var(--mono);font-size:9px;color:var(--tm);line-height:1.4;}
+.aicb{height:2px;background:rgba(255,255,255,.05);border-radius:1px;margin-top:6px;overflow:hidden;}
+.aicbf{height:100%;background:var(--purple);transition:width 1s;}
+
+/* ── LOG ENTRIES ── */
+.le{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr);}
+.le:last-child{border-bottom:none;}
+.lets{font-family:var(--mono);font-size:9px;color:var(--tm);flex-shrink:0;padding-top:1px;}
+.letx{font-family:var(--mono);font-size:10px;}
+
+/* ── NOTIFICATION TOAST ── */
+#toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,18,32,.97);border:1px solid var(--bda);border-radius:4px;padding:9px 16px;font-family:var(--mono);font-size:11px;color:var(--tp);display:none;align-items:center;gap:8px;backdrop-filter:blur(14px);max-width:90%;text-align:center;animation:tin .25s ease-out;}
+#toast.show{display:flex;}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(-8px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+#toast.tc{border-color:var(--cyan);}
+#toast.ta{border-color:var(--amber);}
+#toast.tg{border-color:var(--green);}
+#toast.tr{border-color:var(--red);}
+
+/* ── INCOMING CALL OVERLAY ── */
+#call-overlay{position:fixed;inset:0;z-index:600;background:rgba(2,5,9,.92);display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+#call-overlay.show{display:flex;}
+.call-box{background:var(--panel);border:2px solid var(--amber);border-radius:8px;padding:28px 24px;max-width:320px;width:90%;text-align:center;animation:cbin .3s ease-out;box-shadow:0 0 40px rgba(255,184,0,.2);}
+@keyframes cbin{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
+.call-icon{font-size:42px;margin-bottom:12px;animation:cring .5s ease-in-out infinite alternate;}
+@keyframes cring{from{transform:rotate(-8deg);}to{transform:rotate(8deg);}}
+.call-title{font-family:var(--disp);font-weight:900;font-size:16px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.call-pt{font-size:14px;font-weight:600;margin-bottom:4px;}
+.call-cond{font-family:var(--mono);font-size:11px;color:var(--tm);margin-bottom:14px;}
+.call-addr{background:rgba(255,184,0,.07);border:1px solid rgba(255,184,0,.25);border-radius:3px;padding:9px 11px;font-family:var(--mono);font-size:11px;text-align:left;margin-bottom:16px;line-height:1.6;}
+.call-addr-lbl{font-size:9px;color:var(--amber);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.call-btns{display:flex;gap:10px;}
+.call-acc{flex:1;padding:10px;background:rgba(0,255,157,.12);border:1px solid rgba(0,255,157,.35);border-radius:3px;color:var(--green);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;}
+.call-acc:hover{background:rgba(0,255,157,.22);}
+.call-dec{flex:1;padding:10px;background:rgba(255,45,85,.1);border:1px solid rgba(255,45,85,.3);border-radius:3px;color:var(--red);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;}
+.call-dec:hover{background:rgba(255,45,85,.2);}
+
+/* ── PORTFOLIO MODAL ── */
+#port-modal{position:fixed;inset:0;z-index:700;background:rgba(2,5,9,.95);display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px);}
+#port-modal.show{display:flex;}
+.pm-box{background:var(--panel);border:1px solid var(--bda);border-radius:6px;max-width:360px;width:92%;padding:24px;animation:cbin .25s ease-out;}
+.pm-logo{font-family:var(--disp);font-weight:900;font-size:16px;letter-spacing:2px;color:var(--amber);text-shadow:0 0 16px rgba(255,184,0,.3);margin-bottom:4px;}
+.pm-sub{font-family:var(--mono);font-size:10px;color:var(--tm);margin-bottom:20px;}
+.pm-link{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--glass);border:1px solid var(--bdr);border-radius:3px;margin-bottom:8px;cursor:pointer;transition:all .2s;text-decoration:none;color:var(--tp);}
+.pm-link:hover{border-color:var(--bda);background:rgba(0,229,255,.04);}
+.pm-link:last-of-type{margin-bottom:0;}
+.pm-link-icon{font-size:18px;flex-shrink:0;}
+.pm-link-info{flex:1;}
+.pm-link-name{font-family:var(--mono);font-size:11px;color:var(--cyan);}
+.pm-link-desc{font-family:var(--mono);font-size:9px;color:var(--tm);margin-top:2px;}
+.pm-close{width:100%;margin-top:16px;padding:9px;background:transparent;border:1px solid var(--bda);border-radius:3px;color:var(--tm);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s;}
+.pm-close:hover{border-color:var(--red);color:var(--red);}
+
+/* ── VOICE ── */
+#vind{position:fixed;bottom:42px;right:12px;z-index:300;background:rgba(8,18,32,.94);border:1px solid var(--bda);border-radius:4px;padding:6px 11px;font-family:var(--mono);font-size:10px;color:var(--cyan);display:none;align-items:center;gap:6px;backdrop-filter:blur(12px);}
+#vind.show{display:flex;}
+.vw{display:flex;align-items:center;gap:2px;height:12px;}
+.vb{width:3px;background:var(--cyan);border-radius:2px;animation:vwa .5s ease-in-out infinite;}
+.vb:nth-child(2){animation-delay:.1s;}.vb:nth-child(3){animation-delay:.2s;}.vb:nth-child(4){animation-delay:.3s;}
+@keyframes vwa{0%,100%{height:3px;}50%{height:11px;}}
+
+/* ── FOOTER ── */
+#ftr{position:fixed;bottom:0;left:0;right:0;z-index:200;height:36px;background:rgba(2,5,9,.97);border-top:1px solid var(--bda);display:flex;align-items:center;justify-content:center;gap:7px;backdrop-filter:blur(20px);}
+.fsh{color:var(--amber);font-size:11px;text-shadow:0 0 8px rgba(255,184,0,.4);}
+.fbr{font-family:var(--disp);font-weight:700;font-size:11px;letter-spacing:1.5px;color:var(--amber);text-shadow:0 0 10px rgba(255,184,0,.3);text-transform:uppercase;}
+.fsep{color:var(--td);font-size:10px;}
+.fdev{font-family:var(--mono);font-size:10px;color:var(--tm);}
+.fdev span{color:var(--cyan);}
+
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bda);border-radius:2px;}
+.cyan{color:var(--cyan);}.green{color:var(--green);}.amber{color:var(--amber);}.red{color:var(--red);}
+</style>
+</head>
+<body>
+
+<!-- ROLE SCREEN -->
+<div id="role-screen">
+  <div class="rl-logo">MedCore <span style="color:var(--tm);font-weight:300">/</span> Mission Control</div>
+  <div class="rl-sub">Select your access role · Selecione seu perfil · Seleccione su perfil</div>
+  <div class="rl-cards">
+    <div class="rl-card hosp" onclick="MC.go('hospital')">
+      <span class="rl-icon">🏥</span>
+      <div class="rl-name" style="color:var(--cyan)">Hospital</div>
+      <div class="rl-desc">Full command — dispatch, monitor, send files &amp; alerts to field units</div>
+      <span class="rl-badge" style="background:var(--cdim);color:var(--cyan);border:1px solid rgba(0,229,255,.3)">COMMAND</span>
+    </div>
+    <div class="rl-card driv" onclick="MC.go('driver')">
+      <span class="rl-icon">🚑</span>
+      <div class="rl-name" style="color:var(--amber)">Driver</div>
+      <div class="rl-desc">Field unit — receive calls, files, navigate to patients and update missions</div>
+      <span class="rl-badge" style="background:var(--adim);color:var(--amber);border:1px solid rgba(255,184,0,.3)">FIELD</span>
+    </div>
+    <div class="rl-card clin" onclick="MC.go('clinic')">
+      <span class="rl-icon">🩺</span>
+      <div class="rl-name" style="color:var(--green)">Clinic</div>
+      <div class="rl-desc">Clinic view — send patient files, request transport, monitor arrivals</div>
+      <span class="rl-badge" style="background:var(--gdim);color:var(--green);border:1px solid rgba(0,255,157,.3)">CLINIC</span>
+    </div>
+  </div>
+  <div class="rl-port">
+    <button class="port-btn" onclick="MC.showPortfolio()">🛡 VLS Systems® Portfolio</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header id="hdr" style="display:none">
+  <div class="hd-l">
+    <div class="ldot"></div>
+    <div class="hd-logo">MedCore <s2>/</s2> MC</div>
+    <div id="hrbadge" class="hd-rbadge">—</div>
+  </div>
+  <div class="hd-r">
+    <div id="clk">--:--:--</div>
+    <div class="sep"></div>
+    <button class="hb on" onclick="MC.setLang('en')">🇺🇸</button>
+    <button class="hb" onclick="MC.setLang('pt')">🇧🇷</button>
+    <button class="hb" onclick="MC.setLang('es')">🇪🇸</button>
+    <div class="sep"></div>
+    <button class="hb" id="vbtn" onclick="MC.toggleVoice()">🔊</button>
+    <button class="hb" onclick="MC.showPortfolio()" title="Portfolio">🛡</button>
+    <button class="hb" id="homebtn" onclick="MC.goHome()" title="Home — volta para seleção de perfil">🏠</button>
+    <button id="mnubtn" onclick="MC.openMenu()">☰ MENU</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<div id="tabs" style="display:none"></div>
+
+<!-- NAV MENU OVERLAY -->
+<div id="nav-menu">
+  <div class="nm-header">MedCore <strong>/ Navigation</strong></div>
+  <div class="nm-grid" id="nm-grid"><!-- populated by JS --></div>
+  <div class="nm-footer">
+    <button class="nm-close" onclick="MC.closeMenu()">✕ CLOSE</button>
+    <button class="nm-home" onclick="MC.goHome()">🏠 HOME</button>
+    <button class="nm-role-sw" onclick="MC.menuSwitchRole()">⇄ SWITCH ROLE</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main" style="display:none"></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- INCOMING CALL OVERLAY -->
+<div id="call-overlay">
+  <div class="call-box">
+    <div class="call-icon">🚨</div>
+    <div class="call-title" id="co-title">INCOMING DISPATCH</div>
+    <div class="call-pt" id="co-pt">—</div>
+    <div class="call-cond" id="co-cond">—</div>
+    <div class="call-addr">
+      <div class="call-addr-lbl">📍 Pickup Address</div>
+      <div id="co-addr">—</div>
+    </div>
+    <div class="call-btns">
+      <button class="call-acc" onclick="MC.callAccept()">✓ ACCEPT</button>
+      <button class="call-dec" onclick="MC.callDecline()">✗ DECLINE</button>
+    </div>
+  </div>
+</div>
+
+<!-- PORTFOLIO MODAL -->
+<div id="port-modal">
+  <div class="pm-box">
+    <div class="pm-logo">🛡 VLS Systems®</div>
+    <div class="pm-sub">Developed by Valquíria Lemes · Full Stack Developer</div>
+    <a class="pm-link" href="https://github.com/valkkers-del" target="_blank" rel="noopener">
+      <span class="pm-link-icon">💻</span>
+      <div class="pm-link-info"><div class="pm-link-name">GitHub — valkkers-del</div><div class="pm-link-desc">Source code, PWA projects &amp; repositories</div></div>
+      <span style="color:var(--tm);font-size:11px">↗</span>
+    </a>
+    <a class="pm-link" href="https://www.linkedin.com/in/valqu%C3%ADria-lemes" target="_blank" rel="noopener">
+      <span class="pm-link-icon">🔗</span>
+      <div class="pm-link-info"><div class="pm-link-name">LinkedIn — Valquíria Lemes</div><div class="pm-link-desc">Professional profile &amp; experience</div></div>
+      <span style="color:var(--tm);font-size:11px">↗</span>
+    </a>
+    <a class="pm-link" href="https://www.workana.com" target="_blank" rel="noopener">
+      <span class="pm-link-icon">💼</span>
+      <div class="pm-link-info"><div class="pm-link-name">Workana — Freelance Profile</div><div class="pm-link-desc">Healthcare &amp; logistics software · PWA specialist</div></div>
+      <span style="color:var(--tm);font-size:11px">↗</span>
+    </a>
+    <a class="pm-link" href="https://www.upwork.com" target="_blank" rel="noopener">
+      <span class="pm-link-icon">🚀</span>
+      <div class="pm-link-info"><div class="pm-link-name">Upwork — Freelance Profile</div><div class="pm-link-desc">Available for web &amp; mobile projects</div></div>
+      <span style="color:var(--tm);font-size:11px">↗</span>
+    </a>
+    <button class="pm-close" onclick="MC.closePortfolio()">✕ CLOSE</button>
+  </div>
+</div>
+
+<!-- VOICE INDICATOR -->
+<div id="vind"><div class="vw"><div class="vb"></div><div class="vb"></div><div class="vb"></div><div class="vb"></div></div><span id="vtxt">Alert</span></div>
+
+<!-- FOOTER -->
+<footer id="ftr" style="display:none">
+  <span class="fsh">🛡</span><span class="fbr">VLS Systems®</span>
+  <span class="fsep">|</span>
+  <span class="fdev">Developed by <span>Valquíria Lemes</span></span>
+</footer>
+
+<input type="file" id="fi" multiple accept="*/*">
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════
+//  MEDCORE MISSION CONTROL — PRODUCTION v3
+//  Real working buttons · Real file transfer · Routing map
+//  Offline/Online · Hospital + Driver + Clinic · Portfolio
+// ═══════════════════════════════════════════════════════
+const MC = (() => {
+
+  // ── STATE ──
+  const S = {
+    role:null, lang:'en', tab:0,
+    voice:false, online:navigator.onLine,
+    tick:0, mapPhase:0, ecgPhase:0,
+    patients:[], ambs:[], cap:{}, log:{}, vitals:{},
+    alerts:[], ai:[], dispatches:[],
+    _pid:100, _aid:0, _did:0, _lastCrit:0,
+    pendingCall:null, activeDispatch:null,
+  };
+
+  // ── I18N ──
+  const T = {
+    en:{
+      tabs_h:['⚡ Alerts','🏥 Patients','📊 Status','🗺 Map','🧠 AI','💬 Comms'],
+      tabs_d:['🚨 Calls','💬 Messages','🗺 Navigate','❤️ Vitals','📋 Logs'],
+      tabs_c:['📋 Patients','💬 Comms','🗺 Map','📊 Status'],
+      send:'SEND', attach:'📎',
+      ph:'Message to driver...',pd:'Reply to hospital...',pc:'Message to hospital...',
+      acc:'ACCEPT',dec:'DECLINE',enr:'🚑 EN ROUTE',done:'✓ ARRIVED',comp:'✓ COMPLETE',
+      dst:['STANDBY','EN ROUTE','ON SCENE','RETURNING','OFF DUTY'],
+      pr:['','P1 CRITICAL','P2 URGENT','P3 ROUTINE'],
+      icu:'ICU',er:'Emergency',sx:'Surgery',wd:'General Ward',
+      wt:'Waiting',tx:'In Treatment',tr:'Triage',on:'online',bs:'dispatched',
+      cr:'CRITICAL',hi:'HIGH',md:'MEDIUM',lo:'LOW',
+      vc:['Attention. Critical alert. All units respond immediately.',
+          'Code Blue activated. Crash cart required urgently.',
+          'Mass casualty event incoming. Activate emergency protocol.'],
+      am:{critical:['CARDIAC ARREST — Bay 4','CODE BLUE — ICU Floor 3','MASS CASUALTY INCOMING','TRAUMA — Level 1'],
+          high:['ICU Capacity 90%+','Blood bank critical low','OR delayed 45 min','Ventilator shortage'],
+          medium:['Ambulance ETA delay','Lab results pending 2h','Pharmacy restock needed','Staff overtime alert'],
+          low:['Routine supply request','Shift handover due','Equipment calibration','Transfer ready']},
+      ait:['Triage Decision','Resource Allocation','Discharge Ready','Transfer Request','Medication Alert','Risk Assessment'],
+      aia:['Escalate to ICU — deteriorating hemodynamics','Assign OR-2 trauma, 18 min window','Patient PT-{id} cleared for discharge','Transfer cardiology — ST elevation confirmed','Adjust heparin — weight-based recalculation','High sepsis risk — activate protocol'],
+      air:['HR 118 · BP 88/54 · Lactate 4.2','Injury severity & OR availability','Stable 6h · vitals normal · criteria met','ECG: 2.1mm ST elevation DII III aVF','Weight 94kg · dose subtherapeutic','qSOFA 2 · WBC 18.4 · Temp 38.9°C'],
+      nm:['Rivera, M.','Chen, L.','Santos, A.','Park, J.','Okonkwo, B.','Müller, H.','Torres, E.','Ahmed, F.'],
+      cd:['Chest Pain','Trauma','Stroke','Fracture','Respiratory','Cardiac','Overdose','Sepsis'],
+      lge:['Mission accepted','En route to pickup','Arrived on scene','Patient loaded','En route to hospital','Patient delivered','Mission complete','Dispatch declined'],
+      ft:{'pdf':'📄 PDF Document','doc':'📋 Word Document','docx':'📋 Word Document',
+          'xls':'📊 Excel Spreadsheet','xlsx':'📊 Excel Spreadsheet','csv':'📊 Data File',
+          'jpg':'🖼 JPEG Image','jpeg':'🖼 JPEG Image','png':'🖼 PNG Image','gif':'🎞 GIF Image',
+          'mp4':'🎬 Video File','mov':'🎬 Video File','avi':'🎬 Video File',
+          'mp3':'🎵 Audio File','wav':'🎵 Audio File',
+          'txt':'📝 Text File','json':'⚙ JSON Data','xml':'⚙ XML Data',
+          'zip':'🗜 Archive','rar':'🗜 Archive','7z':'🗜 Archive',
+          'dcm':'🩻 DICOM Medical Image','ecg':'💓 ECG Recording',
+          'default':'📎 File'},
+      addr:[
+        '1611 NW 12th Ave, Miami, FL 33136',
+        '4300 Alton Rd, Miami Beach, FL 33140',
+        '3100 SW 62nd Ave, Miami, FL 33155',
+        '1475 NW 12th Ave, Miami, FL 33136',
+        '5000 University Dr, Coral Gables, FL 33146',
+        '2900 W Flagler St, Miami, FL 33135',
+        '1150 NW 14th St, Miami, FL 33136',
+        '8900 N Kendall Dr, Miami, FL 33176',
+      ],
+    },
+    pt:{
+      tabs_h:['⚡ Alertas','🏥 Pacientes','📊 Status','🗺 Mapa','🧠 IA','💬 Comms'],
+      tabs_d:['🚨 Chamadas','💬 Mensagens','🗺 Navegar','❤️ Sinais','📋 Logs'],
+      tabs_c:['📋 Pacientes','💬 Comms','🗺 Mapa','📊 Status'],
+      send:'ENVIAR',attach:'📎',
+      ph:'Mensagem para o motorista...',pd:'Resposta ao hospital...',pc:'Mensagem ao hospital...',
+      acc:'ACEITAR',dec:'RECUSAR',enr:'🚑 EM ROTA',done:'✓ CHEGOU',comp:'✓ CONCLUÍDO',
+      dst:['AGUARDANDO','EM ROTA','NA CENA','RETORNANDO','FORA DE SERVIÇO'],
+      pr:['','P1 CRÍTICO','P2 URGENTE','P3 ROTINA'],
+      icu:'UTI',er:'Emergência',sx:'Cirurgia',wd:'Internação',
+      wt:'Aguardando',tx:'Em Tratamento',tr:'Triagem',on:'disponível',bs:'em missão',
+      cr:'CRÍTICO',hi:'ALTO',md:'MÉDIO',lo:'BAIXO',
+      vc:['Atenção. Alerta crítico. Todas as unidades respondam.','Código Azul ativado.','Incidente em massa. Ativar protocolo.'],
+      am:{critical:['PARADA CARDÍACA — Leito 4','CÓDIGO AZUL — UTI 3° Andar','INCIDENTE EM MASSA','TRAUMA NÍVEL 1'],
+          high:['UTI 90%+','Banco de sangue crítico','SO atraso 45min','Falta ventiladores'],
+          medium:['Atraso ambulância','Lab 2h pendente','Farmácia reposição','Horas extras'],
+          low:['Suprimentos','Passagem plantão','Calibração','Transferência pronta']},
+      ait:['Decisão Triagem','Alocação Recursos','Alta Médica','Transferência','Alerta Medicação','Avaliação Risco'],
+      aia:['Escalar UTI — hemodinâmica deteriorando','Alocar SO-2 trauma, 18min','PT-{id} liberado para alta','Transferir cardiologia — supra ST','Ajustar heparina — recálculo peso','Alto risco sepse — ativar protocolo'],
+      air:['FC 118 · PA 88/54 · Lactato 4.2','Escore gravidade e disponibilidade','Estável 6h · OK','ECG: 2.1mm supra ST','Peso 94kg · subterapêutico','qSOFA 2 · Leuc 18.4 · Temp 38.9'],
+      nm:['Rivera, M.','Chen, L.','Santos, A.','Park, J.','Okonkwo, B.','Müller, H.','Torres, E.','Ahmed, F.'],
+      cd:['Dor Torácica','Trauma','AVC','Fratura','Respiratório','Cardíaco','Overdose','Sepse'],
+      lge:['Missão aceita','Em rota para busca','Chegou na cena','Paciente embarcado','Em rota ao hospital','Paciente entregue','Missão concluída','Despacho recusado'],
+      ft:{'pdf':'📄 PDF','doc':'📋 Word','docx':'📋 Word','xls':'📊 Excel','xlsx':'📊 Excel','csv':'📊 Dados','jpg':'🖼 Imagem','jpeg':'🖼 Imagem','png':'🖼 Imagem','gif':'🎞 GIF','mp4':'🎬 Vídeo','mp3':'🎵 Áudio','txt':'📝 Texto','dcm':'🩻 DICOM','ecg':'💓 ECG','default':'📎 Arquivo'},
+      addr:['Rua das Flores, 100 — Centro, São Paulo','Av. Paulista, 2000 — Bela Vista, SP','R. Oscar Freire, 500 — Jardins, SP','Av. Brasil, 4365 — Manguinhos, RJ','R. Marquês de Pombal, 200 — RJ','Av. Atlântica, 1702 — Copacabana, RJ','R. da Consolação, 1100 — SP','Av. Rebouças, 800 — Pinheiros, SP'],
+    },
+    es:{
+      tabs_h:['⚡ Alertas','🏥 Pacientes','📊 Estado','🗺 Mapa','🧠 IA','💬 Comms'],
+      tabs_d:['🚨 Llamadas','💬 Mensajes','🗺 Navegar','❤️ Signos','📋 Registro'],
+      tabs_c:['📋 Pacientes','💬 Comms','🗺 Mapa','📊 Estado'],
+      send:'ENVIAR',attach:'📎',
+      ph:'Mensaje al conductor...',pd:'Respuesta al hospital...',pc:'Mensaje al hospital...',
+      acc:'ACEPTAR',dec:'RECHAZAR',enr:'🚑 EN CAMINO',done:'✓ LLEGÓ',comp:'✓ COMPLETAR',
+      dst:['EN ESPERA','EN CAMINO','EN ESCENA','REGRESANDO','FUERA SERVICIO'],
+      pr:['','P1 CRÍTICO','P2 URGENTE','P3 RUTINA'],
+      icu:'UCI',er:'Emergencia',sx:'Cirugía',wd:'Hospitalización',
+      wt:'Esperando',tx:'En Tratamiento',tr:'Triaje',on:'disponible',bs:'en misión',
+      cr:'CRÍTICO',hi:'ALTO',md:'MEDIO',lo:'BAJO',
+      vc:['Atención. Alerta crítica. Todas las unidades respondan.','Código Azul activado.','Víctimas en masa. Activar protocolo.'],
+      am:{critical:['PARO CARDÍACO — Bahía 4','CÓDIGO AZUL — UCI Piso 3','VÍCTIMAS EN MASA','TRAUMA NIVEL 1'],
+          high:['UCI 90%+','Banco sangre crítico','QX retrasado 45min','Escasez ventiladores'],
+          medium:['Retraso ambulancia','Lab pendiente 2h','Farmacia reposición','Alerta horas extra'],
+          low:['Suministros','Cambio turno','Calibración','Traslado listo']},
+      ait:['Decisión Triaje','Asignación Recursos','Alta Médica','Transferencia','Alerta Medicación','Evaluación Riesgo'],
+      aia:['Escalar UCI — hemodinámica deteriorando','Asignar QX-2 trauma, 18min','PT-{id} listo para alta','Transferir cardiología — ST elevado','Ajustar heparina — recálculo peso','Alto riesgo sepsis — activar protocolo'],
+      air:['FC 118 · PA 88/54 · Lactato 4.2','Puntaje severidad y disponibilidad','Estable 6h · OK','ECG: 2.1mm ST elevado','Peso 94kg · subterapéutico','qSOFA 2 · Leuc 18.4 · Temp 38.9'],
+      nm:['Rivera, M.','Chen, L.','Santos, A.','Park, J.','Okonkwo, B.','Müller, H.','Torres, E.','Ahmed, F.'],
+      cd:['Dolor Torácico','Trauma','Derrame','Fractura','Respiratorio','Cardíaco','Sobredosis','Sepsis'],
+      lge:['Misión aceptada','En camino a recogida','Llegó a la escena','Paciente embarcado','En camino al hospital','Paciente entregado','Misión completada','Despacho rechazado'],
+      ft:{'pdf':'📄 PDF','doc':'📋 Word','docx':'📋 Word','xls':'📊 Excel','xlsx':'📊 Excel','csv':'📊 Datos','jpg':'🖼 Imagen','jpeg':'🖼 Imagen','png':'🖼 Imagen','gif':'🎞 GIF','mp4':'🎬 Video','mp3':'🎵 Audio','txt':'📝 Texto','dcm':'🩻 DICOM','ecg':'💓 ECG','default':'📎 Archivo'},
+      addr:['Calle Gran Vía 1, Madrid 28013','Paseo de la Castellana 200, Madrid','Av. Diagonal 100, Barcelona','Calle Alcalá 500, Madrid','Av. Insurgentes Sur 3000, CDMX','Paseo de la Reforma 350, CDMX','Calle 50 No. 15, Bogotá','Av. 9 de Julio 2000, Buenos Aires'],
+    },
+  };
+  const t = k => { const p=k.split('.'); let o=T[S.lang]; for(const x of p) o=o?.[x]; return o??k; };
+
+  // ── COMMS BUS (localStorage) ──
+  const MKEY='mc3_msgs', DKEY='mc3_drv', LKEY='mc3_logs', FKEY='mc3_files';
+  const Bus = {
+    msgs:[], drvStatus:0, logs:[], files:{},
+    load(){
+      try{
+        const m=localStorage.getItem(MKEY); Bus.msgs=m?JSON.parse(m):[];
+        const d=localStorage.getItem(DKEY); if(d){const p=JSON.parse(d);Bus.drvStatus=p.s||0;}
+        const l=localStorage.getItem(LKEY); Bus.logs=l?JSON.parse(l):[];
+        const f=localStorage.getItem(FKEY); Bus.files=f?JSON.parse(f):{};
+      }catch(e){Bus.msgs=[];Bus.logs=[];Bus.files={};}
+    },
+    save(){
+      try{
+        if(Bus.msgs.length>100) Bus.msgs=Bus.msgs.slice(-100);
+        localStorage.setItem(MKEY,JSON.stringify(Bus.msgs));
+      }catch(e){}
+    },
+    push(role,text,file=null){
+      const msg={id:Date.now()+Math.random(),role,text:text.trim(),file,ts:new Date().toLocaleTimeString('en-GB',{hour12:false}),read:false};
+      Bus.msgs.push(msg); Bus.save();
+      // store file data separately
+      if(file&&file.data){Bus.files[msg.id]=file.data;try{localStorage.setItem(FKEY,JSON.stringify(Bus.files));}catch(e){}}
+      return msg;
+    },
+    markRead(viewer){ Bus.msgs.forEach(m=>{if(m.role!==viewer)m.read=true;}); Bus.save(); },
+    unread(viewer){ return Bus.msgs.filter(m=>m.role!==viewer&&!m.read).length; },
+    addLog(txt){ const ts=new Date().toLocaleTimeString('en-GB',{hour12:false}); Bus.logs.unshift({ts,txt}); if(Bus.logs.length>60)Bus.logs.pop(); try{localStorage.setItem(LKEY,JSON.stringify(Bus.logs));}catch(e){} },
+    setDrv(s){ Bus.drvStatus=s; try{localStorage.setItem(DKEY,JSON.stringify({s}));}catch(e){} },
+    getFileData(id){ return Bus.files[id]||null; },
+  };
+
+  // ── ENGINE ──
+  const HOSP=[{lat:25.7853,lng:-80.2284,name:'Jackson Memorial'},{lat:25.8111,lng:-80.1355,name:'Mt Sinai'},{lat:25.7490,lng:-80.2579,name:'Coral Gables'}];
+  const GEO={latMin:25.69,latMax:25.87,lngMin:-80.34,lngMax:-80.08};
+  function proj(lat,lng,W,H){return{x:((lng-GEO.lngMin)/(GEO.lngMax-GEO.lngMin))*W,y:H-((lat-GEO.latMin)/(GEO.latMax-GEO.latMin))*H};}
+  const ROADS=[[25.87,-80.186,25.70,-80.196],[25.87,-80.21,25.70,-80.222],[25.86,-80.18,25.70,-80.24],[25.776,-80.33,25.776,-80.18],[25.78,-80.32,25.78,-80.15],[25.772,-80.31,25.772,-80.14],[25.765,-80.32,25.765,-80.19],[25.845,-80.31,25.845,-80.17],[25.81,-80.31,25.81,-80.16],[25.86,-80.248,25.71,-80.252],[25.85,-80.228,25.72,-80.23],[25.86,-80.27,25.71,-80.275],[25.754,-80.31,25.754,-80.195],[25.8,-80.165,25.73,-80.17],[25.782,-80.195,25.79,-80.13],[25.779,-80.22,25.779,-80.175],[25.866,-80.3,25.866,-80.17]];
+  const WATER=[[25.87,-80.175],[25.855,-80.16],[25.83,-80.155],[25.81,-80.148],[25.79,-80.14],[25.77,-80.148],[25.755,-80.158],[25.74,-80.165],[25.72,-80.178],[25.70,-80.19],[25.70,-80.185],[25.72,-80.172],[25.74,-80.16],[25.758,-80.15],[25.775,-80.142],[25.793,-80.136],[25.812,-80.143],[25.832,-80.15],[25.852,-80.155],[25.87,-80.168]];
+
+  function initEngine(){
+    S.patients=Array.from({length:8},(_,i)=>({id:S._pid++,prio:Math.ceil(Math.random()*5),ni:i%8,ci:Math.floor(Math.random()*8),status:['waiting','in_treatment','triage','in_treatment'][Math.floor(Math.random()*4)],wait:Math.floor(Math.random()*90)}));
+    S.ambs=Array.from({length:6},(_,i)=>{const b=HOSP[i%3];return{id:`A-0${i+1}`,lat:b.lat+(Math.random()-.5)*.06,lng:b.lng+(Math.random()-.5)*.06,tlat:b.lat+(Math.random()-.5)*.05,tlng:b.lng+(Math.random()-.5)*.05,status:i<4?(Math.random()<.6?'online':'busy'):'offline'};});
+    S.cap={icu:{pct:72},er:{pct:85},sx:{pct:60},wd:{pct:68}};
+    S.log={eff:{val:78,h:[70,72,75,73,77,78],unit:'%',col:'#00ff9d'},rsp:{val:8,h:[12,10,9,8,9,8],unit:'min',col:'#00e5ff'},thr:{val:24,h:[18,20,22,21,23,24],unit:'pt/h',col:'#bf5fff'},res:{val:91,h:[85,87,89,88,90,91],unit:'%',col:'#ffb800'}};
+    S.vitals={hr:{val:78,min:55,max:110,col:'#ff2d55'},bp:{val:120,v2:80,col:'#00e5ff'},spo2:{val:97,min:90,max:100,col:'#00ff9d'},tmp:{val:37.1,min:36,max:39.5,col:'#ffb800'}};
+    S.alerts=[]; for(let i=0;i<3;i++) spawnAlert();
+    S.ai=[]; for(let i=0;i<2;i++) spawnAI();
+    S.dispatches=[]; spawnDispatch(); spawnDispatch();
+  }
+
+  function spawnAlert(){
+    const lv=['lo','lo','md','md','hi','cr'][Math.floor(Math.random()*6)];
+    const lvMap={lo:'low',md:'medium',hi:'high',cr:'critical'};
+    const level=lvMap[lv];
+    const ms=T[S.lang].am[level];
+    S.alerts.push({id:S._aid++,level,mi:Math.floor(Math.random()*ms.length),born:Date.now(),ttl:level==='critical'?18000:level==='high'?12000:level==='medium'?9000:6000});
+  }
+  function spawnAI(){
+    const idx=Math.floor(Math.random()*6),conf=70+Math.floor(Math.random()*28);
+    const d={id:S._aid++,ti:Math.floor(Math.random()*6),ai:idx,ri:idx,conf,pid:80+Math.floor(Math.random()*80),born:Date.now(),ttl:22000+Math.random()*12000,isNew:true};
+    S.ai.push(d); setTimeout(()=>{const x=S.ai.find(a=>a.id===d.id);if(x)x.isNew=false;},1200);
+  }
+  function spawnDispatch(){
+    const L=T[S.lang], prio=1+Math.floor(Math.random()*3);
+    const ni=Math.floor(Math.random()*8), ci=Math.floor(Math.random()*8);
+    const ai=Math.floor(Math.random()*L.addr.length);
+    S.dispatches.unshift({id:`D-${String(S._did++).padStart(3,'0')}`,prio,ni,ci,ai,status:'pending',born:Date.now(),progress:0,isNew:true});
+    setTimeout(()=>{const d=S.dispatches.find(x=>x.id===S.dispatches[0]?.id);if(d)d.isNew=false;},800);
+    if(S.dispatches.length>12)S.dispatches.pop();
+    // If driver role active, show incoming call overlay
+    if(S.role==='driver'){
+      const d=S.dispatches[0];
+      S.pendingCall=d;
+      showCallOverlay(d);
+    }
+  }
+
+  function tickEngine(){
+    S.tick++;
+    // patients
+    S.patients.forEach(p=>{p.wait++;if(Math.random()<.03){p.status=['waiting','in_treatment','triage'][Math.floor(Math.random()*3)];}if(Math.random()<.01){p.id=S._pid++;p.prio=Math.ceil(Math.random()*5);p.ni=Math.floor(Math.random()*8);p.ci=Math.floor(Math.random()*8);p.status='triage';p.wait=0;}});
+    S.patients.sort((a,b)=>a.prio-b.prio);
+    // ambs
+    S.ambs.forEach(a=>{a.lat+=(a.tlat-a.lat)*.06;a.lng+=(a.tlng-a.lng)*.06;if(Math.abs(a.tlat-a.lat)<.001&&Math.abs(a.tlng-a.lng)<.001){const b=HOSP[Math.floor(Math.random()*3)];a.tlat=b.lat+(Math.random()-.5)*.07;a.tlng=b.lng+(Math.random()-.5)*.07;if(Math.random()<.2)a.status=['online','busy','online'][Math.floor(Math.random()*3)];}});
+    // cap
+    Object.values(S.cap).forEach(u=>u.pct=Math.max(5,Math.min(100,u.pct+(Math.random()-.45)*2)));
+    // log
+    Object.entries(S.log).forEach(([k,m])=>{m.val=k==='rsp'?Math.max(1,Math.min(30,m.val+(Math.random()-.5)*.6)):Math.max(0,Math.min(100,m.val+(Math.random()-.48)*2.5));m.h.push(parseFloat(m.val.toFixed(1)));if(m.h.length>8)m.h.shift();});
+    // vitals
+    const v=S.vitals;
+    v.hr.val=Math.max(55,Math.min(110,v.hr.val+(Math.random()-.5)*4));
+    v.bp.val=Math.max(90,Math.min(180,v.bp.val+(Math.random()-.5)*3));
+    v.bp.v2=Math.max(50,Math.min(120,v.bp.v2+(Math.random()-.5)*2));
+    v.spo2.val=Math.max(90,Math.min(100,v.spo2.val+(Math.random()-.5)*.7));
+    v.tmp.val=Math.max(36,Math.min(39.5,v.tmp.val+(Math.random()-.5)*.08));
+    // alerts
+    S.alerts=S.alerts.filter(a=>Date.now()-a.born<a.ttl);
+    if(Math.random()<.07) spawnAlert();
+    if(S.alerts.length>8) S.alerts.shift();
+    // AI
+    S.ai=S.ai.filter(a=>Date.now()-a.born<a.ttl);
+    if(Math.random()<.04) spawnAI();
+    if(S.ai.length===0) spawnAI();
+    // dispatches
+    if(Math.random()<.018) spawnDispatch();
+    S.dispatches.forEach(d=>{if(d.status==='en_route')d.progress=Math.min(100,d.progress+(Math.random()*2));});
+    // voice on critical
+    if(S.voice){const cr=S.alerts.filter(a=>a.level==='critical'&&a.born>S._lastCrit);if(cr.length){const m=T[S.lang].vc;voiceSpeak(m[Math.floor(Math.random()*m.length)]);S._lastCrit=Date.now();}}
+    S.online=navigator.onLine;
+  }
+
+  // ── VOICE ──
+  const SYN=window.speechSynthesis; let VSP=false;
+  function voiceSpeak(txt){
+    if(!S.voice||VSP||!SYN)return;
+    const u=new SpeechSynthesisUtterance(txt);
+    u.lang=S.lang==='pt'?'pt-BR':S.lang==='es'?'es-ES':'en-US';
+    u.rate=0.9;u.volume=0.85;VSP=true;
+    const vi=document.getElementById('vind'),vt=document.getElementById('vtxt');
+    if(vi)vi.classList.add('show');if(vt)vt.textContent=txt.length>45?txt.slice(0,45)+'…':txt;
+    u.onend=u.onerror=()=>{VSP=false;if(vi)vi.classList.remove('show');};
+    SYN.speak(u);
+  }
+
+  // ── TOAST ──
+  let toastTimer=null;
+  function toast(msg,type='c'){
+    const el=document.getElementById('toast');if(!el)return;
+    el.className='show t'+type;el.textContent=msg;
+    if(toastTimer)clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>el.classList.remove('show'),3200);
+  }
+
+  // ── MAP ──
+  let mapCtx=null;
+  function mapInit(id){
+    const c=document.getElementById(id);if(!c)return;
+    const W=c.parentElement.offsetWidth||280,H=parseInt(c.parentElement.style.height||'280');
+    c.width=W;c.height=H;mapCtx=c.getContext('2d');
+  }
+  function mapDraw(id,routeTo=null){
+    const c=document.getElementById(id);if(!c||!mapCtx)return;
+    const W=c.width,H=c.height,ctx=mapCtx;
+    ctx.clearRect(0,0,W,H);
+    S.mapPhase+=0.05;
+    // grid
+    ctx.strokeStyle='rgba(0,229,255,.04)';ctx.lineWidth=1;
+    for(let x=0;x<W;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    // water
+    ctx.beginPath();WATER.forEach((p,i)=>{const{x,y}=proj(p[0],p[1],W,H);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.fillStyle='rgba(0,30,60,.5)';ctx.fill();ctx.strokeStyle='rgba(0,80,160,.2)';ctx.lineWidth=1;ctx.stroke();
+    // roads
+    ROADS.forEach(r=>{const a=proj(r[0],r[1],W,H),b=proj(r[2],r[3],W,H);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='rgba(0,229,255,.08)';ctx.lineWidth=1;ctx.stroke();});
+    // route line (driver mode) - simulated
+    if(routeTo&&S.activeDispatch){
+      const origin=proj(25.782,-80.21,W,H);
+      const dest=proj(routeTo.lat,routeTo.lng,W,H);
+      // draw route
+      ctx.beginPath();ctx.moveTo(origin.x,origin.y);
+      ctx.bezierCurveTo(origin.x+(dest.x-origin.x)*.4,origin.y+(dest.y-origin.y)*.1,origin.x+(dest.x-origin.x)*.6,dest.y+(origin.y-dest.y)*.1,dest.x,dest.y);
+      ctx.strokeStyle='rgba(255,184,0,.5)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.stroke();ctx.setLineDash([]);
+      // route glow
+      ctx.beginPath();ctx.moveTo(origin.x,origin.y);
+      ctx.bezierCurveTo(origin.x+(dest.x-origin.x)*.4,origin.y+(dest.y-origin.y)*.1,origin.x+(dest.x-origin.x)*.6,dest.y+(origin.y-dest.y)*.1,dest.x,dest.y);
+      ctx.strokeStyle='rgba(255,184,0,.12)';ctx.lineWidth=8;ctx.stroke();
+      // destination pin
+      ctx.beginPath();ctx.arc(dest.x,dest.y,8,0,Math.PI*2);ctx.fillStyle='rgba(255,45,85,.3)';ctx.fill();ctx.strokeStyle='#ff2d55';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#ff2d55';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText('📍',dest.x,dest.y+3);
+      // driver position (animated)
+      const prog=Math.min(0.95,(S.activeDispatch.progress||0)/100);
+      const rx=origin.x+(dest.x-origin.x)*prog;
+      const ry=origin.y+(dest.y-origin.y)*prog;
+      ctx.beginPath();ctx.arc(rx,ry,7,0,Math.PI*2);ctx.fillStyle='rgba(255,184,0,.25)';ctx.fill();ctx.strokeStyle='#ffb800';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#ffb800';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText('🚑',rx,ry+3);
+    }
+    // hospitals
+    HOSP.forEach(h=>{
+      const{x,y}=proj(h.lat,h.lng,W,H);
+      const r=9+4*Math.abs(Math.sin(S.mapPhase));
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle=`rgba(255,45,85,${.2-0.12*Math.abs(Math.sin(S.mapPhase))})`;ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle='rgba(255,45,85,.25)';ctx.fill();ctx.strokeStyle='#ff2d55';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.strokeStyle='#ff2d55';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x+3,y);ctx.stroke();ctx.beginPath();ctx.moveTo(x,y-3);ctx.lineTo(x,y+3);ctx.stroke();
+      ctx.fillStyle='rgba(255,45,85,.65)';ctx.font='7px monospace';ctx.textAlign='left';ctx.fillText(h.name.split(' ')[0],x+7,y+3);
+    });
+    // ambulances
+    if(!routeTo){
+      S.ambs.forEach(a=>{
+        const p2=proj(a.lat,a.lng,W,H),t2=proj(a.tlat,a.tlng,W,H);
+        const col=a.status==='online'?'#00e5ff':a.status==='busy'?'#ffb800':'#2a4560';
+        if(a.status!=='offline'){ctx.beginPath();ctx.moveTo(p2.x,p2.y);ctx.lineTo(t2.x,t2.y);ctx.strokeStyle=a.status==='online'?'rgba(0,229,255,.1)':'rgba(255,184,0,.07)';ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);}
+        ctx.beginPath();ctx.arc(p2.x,p2.y,3.5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+        if(a.status!=='offline'){ctx.fillStyle=col;ctx.font='7px monospace';ctx.textAlign='center';ctx.fillText(a.id,p2.x,p2.y-7);}
+      });
+    }
+    // UI elements
+    ctx.fillStyle='rgba(0,229,255,.3)';ctx.font='9px monospace';ctx.textAlign='left';ctx.fillText('N↑',8,16);
+    ctx.strokeStyle='rgba(0,229,255,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(W-55,H-12);ctx.lineTo(W-20,H-12);ctx.stroke();
+    ctx.fillStyle='rgba(0,229,255,.3)';ctx.font='7px monospace';ctx.textAlign='center';ctx.fillText('~2km',W-37,H-5);
+    // online/offline badge via DOM
+    const ov=document.querySelector('.map-net-badge');
+    if(ov){ov.className='map-net-badge '+(S.online?'online':'offline');ov.textContent=S.online?'● ONLINE':'○ OFFLINE';}
+  }
+
+  // ── ECG ──
+  function ecgDraw(id){
+    const c=document.getElementById(id);if(!c)return;
+    const ctx=c.getContext('2d'),W=c.parentElement.offsetWidth-22||240;
+    c.width=W;c.height=44;ctx.clearRect(0,0,W,44);
+    S.ecgPhase+=0.1;
+    ctx.beginPath();ctx.strokeStyle='#ff2d55';ctx.lineWidth=1.5;ctx.shadowBlur=7;ctx.shadowColor='#ff2d55';
+    for(let i=0;i<100;i++){const x=(i/100)*W,cy=((i/100*6+S.ecgPhase/(Math.PI*2))%1);let y=22;if(cy<.05)y-=3;else if(cy<.08)y+=2;else if(cy<.10)y-=17;else if(cy<.12)y+=15;else if(cy<.14)y-=3;else if(cy<.25)y-=Math.sin((cy-.14)/.11*Math.PI)*5;y+=(Math.random()-.5)*.4;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+  }
+
+  // ── CALL OVERLAY ──
+  function showCallOverlay(d){
+    const L=T[S.lang];
+    const el=document.getElementById('call-overlay');if(!el)return;
+    document.getElementById('co-pt').textContent=L.nm[d.ni%8];
+    document.getElementById('co-cond').textContent=L.cd[d.ci%8];
+    document.getElementById('co-addr').textContent=L.addr[d.ai%L.addr.length];
+    document.getElementById('co-title').textContent=S.lang==='pt'?'DESPACHO RECEBIDO':S.lang==='es'?'DESPACHO ENTRANTE':'INCOMING DISPATCH';
+    el.classList.add('show');
+    voiceSpeak(S.lang==='pt'?'Nova chamada recebida. Aceitar ou recusar.':S.lang==='es'?'Nueva llamada recibida.':'Incoming dispatch call. Please respond.');
+  }
+
+  // ── FILE UTILS ──
+  function fileIcon(ext){
+    const icons={pdf:'📄',doc:'📋',docx:'📋',xls:'📊',xlsx:'📊',csv:'📊',jpg:'🖼',jpeg:'🖼',png:'🖼',gif:'🎞',webp:'🖼',mp4:'🎬',mov:'🎬',avi:'🎬',mp3:'🎵',wav:'🎵',txt:'📝',json:'⚙',xml:'⚙',zip:'🗜',rar:'🗜',dcm:'🩻',ecg:'💓',svg:'🎨',html:'🌐',js:'💻',py:'🐍'};
+    return icons[ext.toLowerCase()]||'📎';
+  }
+  function fileLabel(ext){const ft=T[S.lang].ft;return ft[ext.toLowerCase()]||ft.default;}
+  function fmtSize(b){return b>1048576?(b/1048576).toFixed(1)+' MB':(b/1024).toFixed(0)+' KB';}
+
+  // ── VIEW BUILDERS ──
+  function renderAlerts(){
+    const L=T[S.lang];
+    return S.alerts.map(a=>{const ms=L.am[a.level];return`<div class="achip a${a.level.slice(0,1).replace('c','c').replace('h','h').replace('m','m').replace('l','l')}" style="${a.level==='critical'?'':''}${a.level==='critical'?'animation:cfl .55s ease-in-out infinite;border-color:var(--red);color:var(--red);background:var(--rdim);box-shadow:0 0 10px var(--rglow)':a.level==='high'?'border-color:rgba(191,95,255,.3);color:var(--purple);background:var(--pdim)':a.level==='medium'?'border-color:rgba(255,184,0,.3);color:var(--amber);background:var(--adim)':'border-color:rgba(0,255,157,.3);color:var(--green);background:var(--gdim)'}">[${t(a.level==='critical'?'cr':a.level==='high'?'hi':a.level==='medium'?'md':'lo')}] ${ms[a.mi%ms.length]}</div>`;}).join('');
+  }
+
+  function renderAI(){
+    const L=T[S.lang];
+    return S.ai.map(d=>{
+      const act=(L.aia[d.ai%6]||'').replace('{id}',d.pid);
+      const age=Math.floor((Date.now()-d.born)/1000);
+      return `<div class="aic ${d.isNew?'new':''}"><div class="aich"><span class="aicl">${L.ait[d.ti%6]}</span><span class="aicc">${d.conf}% · ${age}s</span></div><div class="aica">${act}</div><div class="aicr">${L.air[d.ri%6]}</div><div class="aicb"><div class="aicbf" style="width:${d.conf}%"></div></div></div>`;
+    }).join('');
+  }
+
+  function renderMsgThread(viewerRole){
+    Bus.load();
+    if(!Bus.msgs.length) return '<div class="mthread"><div class="mbub sys">No messages yet — start the conversation</div></div>';
+    return '<div class="mthread" id="mth">'+Bus.msgs.map(m=>{
+      const own=m.role===viewerRole;
+      let fh='';
+      if(m.file){
+        const ext=(m.file.name||'').split('.').pop()||'';
+        const ico=fileIcon(ext);
+        const lbl=m.file.label||fileLabel(ext);
+        const hasData=!!m.file.data||!!Bus.getFileData(m.id);
+        fh=`<div class="mfile" onclick="MC.openFile(${m.id})"><span class="mficon">${ico}</span><div class="mfinfo"><div class="mfname">${m.file.name||'Attachment'}</div><div class="mfsize">${lbl} · ${m.file.size||'—'}</div></div><span class="mfdl">${hasData?'⬇ OPEN':'📎 VIEW'}</span></div>`;
+      }
+      const nb=!own&&!m.read?'<span style="color:var(--amber);font-size:8px;background:rgba(255,184,0,.12);padding:1px 4px;border-radius:2px">NEW</span>':'';
+      const hl=!own&&!m.read?'border-color:rgba(255,184,0,.4);':'' ;
+      return `<div class="mbub ${m.role}" style="${hl}"><div class="mmeta"><span class="mrole ${m.role}">${m.role==='hospital'?'🏥 HOSPITAL':m.role==='clinic'?'🩺 CLINIC':'🚑 DRIVER'}</span><span>${m.ts}</span>${nb}</div>${m.text?`<div>${m.text}</div>`:''}${fh}</div>`;
+    }).join('')+'</div>';
+  }
+
+  function renderCompose(role){
+    const L=T[S.lang];
+    const ph=role==='hospital'?L.ph:role==='driver'?L.pd:L.pc;
+    const cls=role==='hospital'?'sh':role==='driver'?'sd':'sc';
+    const iCls=role==='driver'?'di':role==='clinic'?'ci':'';
+    return `<div class="cbar"><button class="attbtn" onclick="MC.attachFile()" title="Attach file — any format supported">${L.attach}</button><textarea class="cinp ${iCls}" id="cinp" placeholder="${ph}" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();MC.sendMsg();}"></textarea><button class="csnd ${cls}" onclick="MC.sendMsg()">${L.send}</button></div>`;
+  }
+
+  function renderDispatches(){
+    const L=T[S.lang];
+    if(!S.dispatches.length) return `<div style="font-family:var(--mono);font-size:11px;color:var(--tm);text-align:center;padding:20px">No active dispatch orders</div>`;
+    return S.dispatches.slice(0,6).map(d=>{
+      const addr=L.addr[d.ai%L.addr.length];
+      const nm=L.nm[d.ni%8], cd=L.cd[d.ci%8];
+      const pr=L.pr[d.prio];
+      const pc=d.prio===1?'p1':d.prio===2?'p2':'p3';
+      const sc=d.status==='en_route'?'var(--amber)':d.status==='complete'?'var(--green)':d.status==='arrived'?'var(--green)':d.status==='accepted'?'var(--cyan)':'var(--tm)';
+      let acts='';
+      if(d.status==='pending') acts=`<button class="dca acc" onclick="MC.dAction('${d.id}','accept')">✓ ${L.acc}</button><button class="dca dec" onclick="MC.dAction('${d.id}','decline')">✗ ${L.dec}</button>`;
+      else if(d.status==='accepted') acts=`<button class="dca enr" onclick="MC.dAction('${d.id}','enr')">🚑 ${L.enr}</button>`;
+      else if(d.status==='en_route') acts=`<button class="dca arr" onclick="MC.dAction('${d.id}','arrived')">📍 ${L.done}</button>`;
+      else if(d.status==='arrived') acts=`<button class="dca done" onclick="MC.dAction('${d.id}','complete')">✓ ${L.comp}</button>`;
+      const bar=d.status==='en_route'?`<div class="dprog"><div class="dprogf" style="width:${d.progress}%"></div></div>`:'';
+      return `<div class="dcall ${d.prio===1?'urg':d.status==='en_route'?'enr':d.status==='complete'?'done':''}${d.isNew?' new-disp-blink':''}"><div class="dch"><span class="dcid">${d.id} · <span style="color:${sc}">${d.status.toUpperCase()}</span></span><span class="dcpr ${pc}">${pr}</span></div><div class="dcpt">${nm}</div><div class="dcnd">${cd}</div><div class="dcaddr"><span class="dcaddr-pin">📍</span><div>${addr}</div></div><div class="dcacts">${acts}</div>${bar}</div>`;
+    }).join('');
+  }
+
+  function renderCap(){
+    const L=T[S.lang];
+    const lbl=[L.icu,L.er,L.sx,L.wd];
+    return Object.entries(S.cap).map(([,u],i)=>{
+      const c=u.pct>=90?'#ff2d55':u.pct>=75?'#ffb800':u.pct>=55?'#00e5ff':'#00ff9d';
+      return `<div class="cu"><div class="cur"><span class="cun">${lbl[i]}</span><span class="cup" id="cp${i}" style="color:${c}">${u.pct.toFixed(0)}%</span></div><div class="cub"><div class="cubf" id="cb${i}" style="width:${u.pct}%;background:${c}"></div></div></div>`;
+    }).join('');
+  }
+
+  function renderLog(){
+    const lbl=['Efficiency','Response','Throughput','Resources'];
+    return Object.entries(S.log).map(([k,m],i)=>{
+      const maxV=Math.max(...m.h,1);
+      const bars=m.h.map(v=>`<div class="spc" style="height:${Math.max(2,(v/maxV)*16)}px;background:${m.col};opacity:.7"></div>`).join('');
+      return `<div class="lm" style="border:1px solid ${m.col}22"><div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:${m.col};opacity:.4"></div><div class="lml">${lbl[i]}</div><div class="lmv" style="color:${m.col};text-shadow:0 0 8px ${m.col}55">${k==='rsp'?m.val.toFixed(1):Math.round(m.val)}</div><div class="lmu">${m.unit}</div><div class="spk">${bars}</div></div>`;
+    }).join('');
+  }
+
+  function renderPatientQueue(){
+    const L=T[S.lang];
+    return S.patients.slice(0,8).map(p=>`<div class="prow"><div class="pdot r${p.prio}"></div><div class="pn">${L.nm[p.ni%8]} <span style="color:var(--tm);font-size:10px">${L.cd[p.ci%8]}</span></div><div class="pst ${p.status==='in_treatment'?'cyan':p.status==='triage'?'amber':''}">${t(p.status==='in_treatment'?'tx':p.status==='waiting'?'wt':'tr')}</div><div class="pw">${p.wait}m</div></div>`).join('');
+  }
+
+  // ── FULL VIEW RENDERS ──
+  const VIEWS = {
+    // HOSPITAL
+    h0(){ return `<div class="pnl"><div class="ph"><span class="pt">⚡ ${S.lang==='pt'?'Alertas Críticos':S.lang==='es'?'Alertas Críticas':'Critical Alerts'}</span><span class="ps" id="ac">${S.alerts.length} active</span></div><div class="pb"><div id="astrip" class="astrip">${renderAlerts()}</div></div></div><div class="pnl"><div class="ph"><span class="pt">🧠 AI Engine</span><span class="ps">${S.ai.length} decisions</span></div><div class="pb" id="aib">${renderAI()}</div></div>`; },
+    h1(){ const L=T[S.lang];const w=S.patients.filter(p=>p.status==='waiting').length;const tr=S.patients.filter(p=>p.status==='in_treatment').length;return`<div class="pnl"><div class="ph"><span class="pt">🏥 ${S.lang==='pt'?'Pacientes':S.lang==='es'?'Pacientes':'Patients'}</span><span class="ps">${S.patients.length} total</span></div><div class="pb"><div class="sc2 g3"><div class="scc"><span class="scv amber">${w}</span><span class="scl">${L.wt}</span></div><div class="scc"><span class="scv cyan">${tr}</span><span class="scl">${L.tx}</span></div><div class="scc"><span class="scv green">${S.patients.length-w-tr}</span><span class="scl">${L.tr}</span></div></div><div id="pq">${renderPatientQueue()}</div></div></div>`; },
+    h2(){ return`<div class="pnl"><div class="ph"><span class="pt">📊 ${S.lang==='pt'?'Capacidade':S.lang==='es'?'Capacidad':'Capacity'}</span></div><div class="pb" id="capb">${renderCap()}</div></div><div class="pnl"><div class="ph"><span class="pt">⚙ Logistics</span></div><div class="pb"><div class="g2" id="logb">${renderLog()}</div></div></div>`; },
+    h3(){ const on=S.ambs.filter(a=>a.status==='online').length,bs=S.ambs.filter(a=>a.status==='busy').length;return`<div class="pnl"><div class="ph"><span class="pt">🗺 ${S.lang==='pt'?'Mapa ao Vivo':S.lang==='es'?'Mapa en Vivo':'Live Map'}</span><span class="ps">${on} ${t('on')} · ${bs} ${t('bs')}</span></div><div class="pb" style="padding:0"><div id="mapc" style="height:280px;position:relative"><canvas id="mapcanvas"></canvas><div id="mapov">🏥 ${HOSP.length} hospitals · 🚑 ${S.ambs.length} units · Miami, FL</div><div class="map-net-badge ${S.online?'online':'offline'}">${S.online?'● ONLINE':'○ OFFLINE'}</div></div></div></div>`; },
+    h4(){ return`<div class="pnl"><div class="ph"><span class="pt">🧠 AI Clinical Engine</span><span class="ps" id="aic2">${S.ai.length} active</span></div><div class="pb" id="aifull">${renderAI()}</div></div>`; },
+    h5(){ return`<div class="pnl"><div class="ph"><span class="pt">💬 ${S.lang==='pt'?'Hospital ↔ Motorista':S.lang==='es'?'Hospital ↔ Conductor':'Hospital ↔ Driver Comms'}</span><span class="ps">${Bus.unread('hospital')} unread</span></div><div class="pb">${renderMsgThread('hospital')}${renderCompose('hospital')}</div></div>`; },
+    // DRIVER
+    d0(){ const L=T[S.lang];return`<div id="dsb"><div class="dsbd"></div><div class="dsbst">${L.dst[Bus.drvStatus]||L.dst[0]}</div><div class="dsbun">Unit A-01 · ${new Date().toLocaleTimeString('en-GB',{hour12:false})}</div></div><div class="pnl"><div class="ph"><span class="pt a">🚨 ${S.lang==='pt'?'Chamadas de Despacho':S.lang==='es'?'Llamadas de Despacho':'Dispatch Calls'}</span><span class="ps">${S.dispatches.filter(d=>d.status==='pending').length} pending</span></div><div class="pb" id="dcb">${renderDispatches()}</div></div>`; },
+    d1(){ return`<div class="pnl"><div class="ph"><span class="pt a">💬 ${S.lang==='pt'?'Mensagens':S.lang==='es'?'Mensajes':'Messages'}</span><span class="ps">${Bus.unread('driver')} unread</span></div><div class="pb">${renderMsgThread('driver')}${renderCompose('driver')}</div></div>`; },
+    d2(){
+      const L=T[S.lang];
+      const ad=S.activeDispatch;
+      const addr=ad?L.addr[ad.ai%L.addr.length]:'No active mission';
+      const dest=ad?HOSP[S._did%3]:null;
+      return`<div class="pnl"><div class="ph"><span class="pt a">🗺 ${S.lang==='pt'?'Navegação':S.lang==='es'?'Navegación':'Navigation'}</span><span class="ps">${ad?`En route`:S.lang==='pt'?'Sem missão':S.lang==='es'?'Sin misión':'No active mission'}</span></div><div class="pb" style="padding:0"><div id="mapc" style="height:260px;position:relative"><canvas id="mapcanvas"></canvas><div id="mapov">${ad?`🚑 Routing to: ${addr}`:'🚑 Unit A-01 · GPS ready'}</div><div class="map-net-badge ${S.online?'online':'offline'}">${S.online?'● ONLINE':'○ OFFLINE'}</div></div></div></div>
+      ${ad?`<div class="pnl"><div class="ph"><span class="pt a">📍 Destination</span></div><div class="pb"><div style="font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--tp)">${addr}</div><div style="font-family:var(--mono);font-size:10px;color:var(--tm);margin-top:4px">ETA: ${Math.max(1,Math.floor(15-((ad.progress||0)/100)*14))} min · Distance: ${((1-((ad.progress||0)/100))*4.2).toFixed(1)} km</div></div></div>`:''}`;
+    },
+    d3(){ const v=S.vitals;const fH=v.hr.val>100||v.hr.val<60,fS=v.spo2.val<94;return`<div class="pnl"><div class="ph"><span class="pt a">❤️ Patient Vitals</span><span class="ps">PT-${S._pid-1} · ACTIVE</span></div><div class="pb"><div class="vrow"><div class="vl">Heart Rate</div><div style="text-align:right"><div class="vv" id="vhr" style="color:${fH?'#ff2d55':v.hr.col};text-shadow:0 0 8px ${v.hr.col}55">${Math.round(v.hr.val)}</div><div class="vu">bpm</div></div></div><div class="vrow"><div class="vl">Blood Pressure</div><div style="text-align:right"><div class="vv" id="vbp" style="color:${v.bp.col};text-shadow:0 0 8px ${v.bp.col}55">${Math.round(v.bp.val)}/${Math.round(v.bp.v2)}</div><div class="vu">mmHg</div></div></div><div class="vrow"><div class="vl">O₂ Saturation</div><div style="text-align:right"><div class="vv" id="vsp" style="color:${fS?'#ff2d55':v.spo2.col};text-shadow:0 0 8px ${v.spo2.col}55">${v.spo2.val.toFixed(1)}</div><div class="vu">SpO₂%</div></div></div><div class="vrow"><div class="vl">Temperature</div><div style="text-align:right"><div class="vv" id="vtmp" style="color:${v.tmp.col};text-shadow:0 0 8px ${v.tmp.col}55">${v.tmp.val.toFixed(1)}</div><div class="vu">°C</div></div></div><canvas id="ecgc" width="400" height="44"></canvas></div></div><div class="pnl"><div class="ph"><span class="pt a">🚨 Active Alerts</span></div><div class="pb"><div class="astrip">${renderAlerts()}</div></div></div>`; },
+    d4(){ Bus.load();return`<div class="pnl"><div class="ph"><span class="pt a">📋 Mission Logs</span><span class="ps">${Bus.logs.length} entries</span></div><div class="pb">${Bus.logs.length===0?'<div style="font-family:var(--mono);font-size:11px;color:var(--tm);text-align:center;padding:16px">No logs yet</div>':Bus.logs.map(e=>`<div class="le"><span class="lets">${e.ts}</span><span class="letx">${e.txt}</span></div>`).join('')}</div></div>`; },
+    // CLINIC
+    c0(){ const L=T[S.lang];const w=S.patients.filter(p=>p.status==='waiting').length,tr=S.patients.filter(p=>p.status==='in_treatment').length;return`<div class="pnl"><div class="ph"><span class="pt g">📋 ${S.lang==='pt'?'Pacientes da Clínica':'Clinic Patients'}</span><span class="ps">${S.patients.length} total</span></div><div class="pb"><div class="sc2 g3"><div class="scc"><span class="scv amber">${w}</span><span class="scl">${L.wt}</span></div><div class="scc"><span class="scv cyan">${tr}</span><span class="scl">${L.tx}</span></div><div class="scc"><span class="scv green">${S.patients.length-w-tr}</span><span class="scl">${L.tr}</span></div></div><div id="pq">${renderPatientQueue()}</div></div></div>`; },
+    c1(){ return`<div class="pnl"><div class="ph"><span class="pt g">💬 ${S.lang==='pt'?'Clinic ↔ Hospital':S.lang==='es'?'Clínica ↔ Hospital':'Clinic ↔ Hospital Comms'}</span><span class="ps">${Bus.unread('clinic')} unread</span></div><div class="pb">${renderMsgThread('clinic')}${renderCompose('clinic')}</div></div>`; },
+    c2(){ const on=S.ambs.filter(a=>a.status==='online').length;return`<div class="pnl"><div class="ph"><span class="pt g">🗺 Live Map</span><span class="ps">${on} units available</span></div><div class="pb" style="padding:0"><div id="mapc" style="height:280px;position:relative"><canvas id="mapcanvas"></canvas><div id="mapov">🏥 Clinic view · Miami, FL</div><div class="map-net-badge ${S.online?'online':'offline'}">${S.online?'● ONLINE':'○ OFFLINE'}</div></div></div></div>`; },
+    c3(){ return`<div class="pnl"><div class="ph"><span class="pt g">📊 Status</span></div><div class="pb" id="capb">${renderCap()}</div></div><div class="pnl"><div class="ph"><span class="pt g">⚙ Logistics</span></div><div class="pb"><div class="g2">${renderLog()}</div></div></div>`; },
+  };
+
+  // ── UI ──
+  function buildTabs(){
+    const arr=S.role==='hospital'?T[S.lang].tabs_h:S.role==='driver'?T[S.lang].tabs_d:T[S.lang].tabs_c;
+    const msgIdx=S.role==='driver'?1:S.role==='clinic'?1:5;
+    const un=Bus.unread(S.role);
+    // tabs strip hidden; menu built on demand
+    // rebuild unread badge if menu open
+    const nmOpen=document.getElementById('nav-menu')?.classList.contains('open');
+    if(nmOpen) buildMenu();
+    document.getElementById('tabs').innerHTML=arr.map((tb,i)=>`<div class="tab ${S.role==='driver'?'don':''}${S.role==='clinic'?'con':''} ${i===S.tab?'on':''}" onclick="MC.setTab(${i})">${tb}<span class="tnot ${i===msgIdx&&un>0?'s':''}">${un}</span></div>`).join('');
+  }
+
+  function renderTab(){
+    const el=document.getElementById('main');if(!el)return;
+    const fn=S.role==='hospital'?VIEWS['h'+S.tab]:S.role==='driver'?VIEWS['d'+S.tab]:VIEWS['c'+S.tab];
+    el.innerHTML=fn?fn():'';
+    // post-render hooks
+    const isMap=(S.role==='hospital'&&S.tab===3)||(S.role==='driver'&&S.tab===2)||(S.role==='clinic'&&S.tab===2);
+    if(isMap){setTimeout(()=>{mapInit('mapcanvas');const ad=S.role==='driver'?S.activeDispatch:null;const dest=ad?HOSP[S._did%3]:null;mapDraw('mapcanvas',dest?{lat:dest.lat,lng:dest.lng}:null);},30);}
+    const isMsgTab=(S.role==='hospital'&&S.tab===5)||(S.role==='driver'&&S.tab===1)||(S.role==='clinic'&&S.tab===1);
+    if(isMsgTab){Bus.markRead(S.role);}
+    setTimeout(()=>{const t=document.getElementById('mth');if(t)t.scrollTop=t.scrollHeight;},50);
+    buildTabs();
+  }
+
+  function partialUpdate(){
+    const {role:r,tab:tb}=S;
+    const cl=document.getElementById('clk');if(cl)cl.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false})+' UTC';
+    if(r==='hospital'){
+      if(tb===0){const as=document.getElementById('astrip');if(as)as.innerHTML=renderAlerts();const ab=document.getElementById('aib');if(ab)ab.innerHTML=renderAI();}
+      if(tb===1){const pq=document.getElementById('pq');if(pq)pq.innerHTML=renderPatientQueue();}
+      if(tb===2){Object.entries(S.cap).forEach(([,u],i)=>{const c=u.pct>=90?'#ff2d55':u.pct>=75?'#ffb800':u.pct>=55?'#00e5ff':'#00ff9d';const ep=document.getElementById(`cp${i}`);if(ep){ep.textContent=u.pct.toFixed(0)+'%';ep.style.color=c;}const eb=document.getElementById(`cb${i}`);if(eb){eb.style.width=u.pct+'%';eb.style.background=c;}});}
+      if(tb===3){const ad=S.activeDispatch;mapDraw('mapcanvas',ad?{lat:HOSP[0].lat,lng:HOSP[0].lng}:null);}
+      if(tb===4){const af=document.getElementById('aifull');if(af)af.innerHTML=renderAI();}
+    }
+    if(r==='driver'){
+      if(tb===0){const dc=document.getElementById('dcb');if(dc)dc.innerHTML=renderDispatches();}
+      if(tb===2){const ad=S.activeDispatch;const dest=ad?HOSP[S._did%3]:null;mapDraw('mapcanvas',dest?{lat:dest.lat,lng:dest.lng}:null);}
+      if(tb===3){
+        ecgDraw('ecgc');
+        const v=S.vitals,fH=v.hr.val>100||v.hr.val<60,fS=v.spo2.val<94;
+        const vhr=document.getElementById('vhr');if(vhr){vhr.textContent=Math.round(v.hr.val);vhr.style.color=fH?'#ff2d55':v.hr.col;}
+        const vbp=document.getElementById('vbp');if(vbp)vbp.textContent=Math.round(v.bp.val)+'/'+Math.round(v.bp.v2);
+        const vsp=document.getElementById('vsp');if(vsp){vsp.textContent=v.spo2.val.toFixed(1);vsp.style.color=fS?'#ff2d55':v.spo2.col;}
+        const vtmp=document.getElementById('vtmp');if(vtmp)vtmp.textContent=v.tmp.val.toFixed(1);
+      }
+    }
+    if(r==='clinic'&&tb===2){mapDraw('mapcanvas',null);}
+    buildTabs();
+  }
+
+  // ── PUBLIC API ──
+  function go(role){
+    S.role=role; S.tab=0;
+    Bus.load(); initEngine();
+    document.getElementById('role-screen').style.display='none';
+    ['hdr','tabs','main','ftr'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=id==='ftr'||id==='hdr'?'flex':id==='tabs'?'flex':'block';});
+    const badge=document.getElementById('hrbadge');
+    if(badge){badge.textContent=role==='hospital'?'🏥 Hospital':role==='driver'?'🚑 Driver':'🩺 Clinic';badge.className='hd-rbadge '+role;}
+    buildTabs(); renderTab(); startLoop();
+    toast(role==='hospital'?'🏥 Hospital Command active':role==='driver'?'🚑 Driver Mode active':'🩺 Clinic Mode active',role==='hospital'?'c':role==='driver'?'a':'g');
+  }
+
+  function switchRole(){
+    ['hdr','tabs','main','ftr'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    document.getElementById('role-screen').style.display='flex';
+    S.role=null;S.tab=0;
+  }
+
+  function setTab(i){
+    S.tab=i; renderTab();
+    if(S.role==='hospital'&&i===5) Bus.markRead('hospital');
+    if(S.role==='driver'&&i===1) Bus.markRead('driver');
+    if(S.role==='clinic'&&i===1) Bus.markRead('clinic');
+  }
+
+  function setLang(lang){
+    S.lang=lang;
+    document.querySelectorAll('.hb[onclick*="setLang"]').forEach(b=>b.classList.remove('on'));
+    const btn=document.querySelector(`.hb[onclick="MC.setLang('${lang}')"]`);if(btn)btn.classList.add('on');
+    if(S.role){buildTabs();renderTab();}
+  }
+
+  function toggleVoice(){
+    S.voice=!S.voice;
+    const btn=document.getElementById('vbtn');if(btn)btn.classList.toggle('on',S.voice);
+    if(S.voice) voiceSpeak(S.lang==='pt'?'Alertas ativados.':S.lang==='es'?'Alertas activadas.':'Voice alerts activated.');
+    else{SYN.cancel();const vi=document.getElementById('vind');if(vi)vi.classList.remove('show');}
+    toast(S.voice?'🔊 Voice alerts ON':'🔇 Voice alerts OFF',S.voice?'c':'a');
+  }
+
+  function sendMsg(){
+    const el=document.getElementById('cinp');
+    if(!el||!el.value.trim())return;
+    Bus.push(S.role,el.value.trim());
+    el.value='';
+    Bus.addLog(`Message sent by ${S.role}`);
+    toast('✓ Message sent','c');
+    renderTab();
+  }
+
+  function attachFile(){
+    const fi=document.getElementById('fi');
+    fi.value='';
+    fi.onchange=()=>{
+      const files=fi.files;
+      if(!files||!files.length)return;
+      Array.from(files).forEach(file=>{
+        const ext=file.name.split('.').pop().toLowerCase();
+        const lbl=fileLabel(ext);
+        const fo={name:file.name,size:fmtSize(file.size),label:lbl,ext};
+        // Read file as base64 for real storage
+        const reader=new FileReader();
+        reader.onload=e=>{
+          fo.data=e.target.result.slice(0,500)+'…[stored]'; // truncate for storage
+          fo.fullData=e.target.result;
+          Bus.push(S.role,'',fo);
+          Bus.addLog(`File sent: ${file.name} (${fmtSize(file.size)})`);
+          toast(`📎 ${file.name} sent`,'g');
+          renderTab();
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+    fi.click();
+  }
+
+  function openFile(msgId){
+    Bus.load();
+    const msg=Bus.msgs.find(m=>m.id===msgId);
+    if(!msg||!msg.file)return;
+    const data=msg.file.fullData||Bus.getFileData(msgId);
+    if(data){
+      // Create downloadable link
+      const a=document.createElement('a');
+      a.href=data;
+      a.download=msg.file.name||'attachment';
+      a.click();
+      toast(`⬇ Opening ${msg.file.name}`,'c');
+    } else {
+      toast(`📎 ${msg.file.name} · ${msg.file.size} · ${msg.file.label}`,'a');
+    }
+  }
+
+  function callAccept(){
+    const d=S.pendingCall;
+    if(!d)return;
+    document.getElementById('call-overlay').classList.remove('show');
+    d.status='accepted';
+    S.activeDispatch=d;
+    Bus.setDrv(0);
+    Bus.addLog(T[S.lang].lge[0]);
+    Bus.push('driver',`✓ ${T[S.lang].lge[0]} — ${d.id}`);
+    toast('✓ Dispatch accepted — navigate to patient','g');
+    S.tab=0; renderTab();
+    S.pendingCall=null;
+  }
+
+  function callDecline(){
+    const d=S.pendingCall;
+    if(d){d.status='declined';S.dispatches=S.dispatches.filter(x=>x.id!==d.id);Bus.addLog(T[S.lang].lge[7]);}
+    document.getElementById('call-overlay').classList.remove('show');
+    toast('Dispatch declined','a');
+    S.pendingCall=null;
+    renderTab();
+  }
+
+  function dAction(id,action){
+    const d=S.dispatches.find(x=>x.id===id);if(!d)return;
+    const L=T[S.lang];
+    if(action==='accept'){d.status='accepted';S.activeDispatch=d;Bus.setDrv(0);Bus.addLog(L.lge[0]);Bus.push('driver',`✓ ${L.lge[0]} — ${id}`);toast('✓ Accepted — get ready to depart','g');}
+    else if(action==='decline'){d.status='declined';S.dispatches=S.dispatches.filter(x=>x.id!==id);Bus.addLog(L.lge[7]);toast('Dispatch declined','a');}
+    else if(action==='enr'){d.status='en_route';d.progress=0;S.activeDispatch=d;Bus.setDrv(1);Bus.addLog(L.lge[1]);Bus.push('driver',`🚑 ${L.dst[1]} — ${id}`);toast('🚑 En route — follow navigation','a');S.tab=2;}
+    else if(action==='arrived'){d.status='arrived';Bus.setDrv(2);Bus.addLog(L.lge[2]);Bus.push('driver',`📍 ${L.lge[2]} — ${id}`);toast('📍 Arrived on scene','g');}
+    else if(action==='complete'){d.status='complete';Bus.setDrv(0);S.activeDispatch=null;Bus.addLog(L.lge[6]);Bus.push('driver',`✅ ${L.lge[6]} — ${id}`);toast('✅ Mission complete!','g');setTimeout(()=>S.dispatches=S.dispatches.filter(x=>x.id!==id),3500);}
+    renderTab();
+  }
+
+  function showPortfolio(){document.getElementById('port-modal').classList.add('show');}
+  function closePortfolio(){document.getElementById('port-modal').classList.remove('show');}
+
+  let _started=false;
+  function startLoop(){
+    if(_started)return;_started=true;
+    setInterval(()=>{tickEngine();if(S.role)partialUpdate();},300);
+    setInterval(()=>{if(!S.role)return;Bus.load();buildTabs();},900);
+    window.addEventListener('online', ()=>{S.online=true;toast('🌐 Connection restored','g');});
+    window.addEventListener('offline',()=>{S.online=false;toast('⚠ Offline mode — data cached','a');});
+    // close menu on backdrop click
+    const nm=document.getElementById('nav-menu');
+    if(nm) nm.addEventListener('click',e=>{if(e.target===nm) closeMenu();});
+    // close menu on Escape
+    document.addEventListener('keydown',e=>{if(e.key==='Escape') closeMenu();});
+  }
+
+
+  // ── NAV MENU ──
+  const NAV_DESCS = {
+    en:{
+      h:['Live alerts & AI decisions','Patient queue & priorities','Capacity & logistics metrics','Live dispatch map','AI clinical decisions','Chat & file transfer'],
+      d:['Incoming dispatch calls','Messages & file transfer','GPS navigation & routing','Patient vitals monitor','Mission activity logs'],
+      c:['Clinic patient list','Comms with hospital','Live unit map','Capacity & logistics'],
+    },
+    pt:{
+      h:['Alertas e decisões IA','Fila e prioridades','Capacidade e logística','Mapa ao vivo','Decisões clínicas IA','Chat e arquivos'],
+      d:['Chamadas de despacho','Mensagens e arquivos','Navegação GPS','Sinais vitais','Logs da missão'],
+      c:['Pacientes da clínica','Comunicação hospital','Mapa ao vivo','Capacidade e logística'],
+    },
+    es:{
+      h:['Alertas y decisiones IA','Cola y prioridades','Capacidad y logística','Mapa en vivo','Decisiones clínicas IA','Chat y archivos'],
+      d:['Llamadas de despacho','Mensajes y archivos','Navegación GPS','Signos vitales','Registros de misión'],
+      c:['Pacientes clínica','Comunicación hospital','Mapa en vivo','Capacidad y logística'],
+    },
+  };
+
+  function buildMenu(){
+    const grid=document.getElementById('nm-grid');if(!grid)return;
+    const tabs=S.role==='hospital'?T[S.lang].tabs_h:S.role==='driver'?T[S.lang].tabs_d:T[S.lang].tabs_c;
+    const descs=(NAV_DESCS[S.lang]||NAV_DESCS.en)[S.role==='hospital'?'h':S.role==='driver'?'d':'c']||[];
+    const roleClass=S.role==='driver'?'drv-tab':S.role==='clinic'?'clin-tab':'';
+    const accentColor=S.role==='driver'?'var(--amber)':S.role==='clinic'?'var(--green)':'var(--cyan)';
+    const msgTabIdx=S.role==='driver'?1:S.role==='clinic'?1:5;
+    const unread=Bus.unread(S.role);
+    grid.innerHTML=tabs.map((tb,i)=>{
+      const parts=tb.split(' ');
+      const icon=parts[0];
+      const name=parts.slice(1).join(' ')||tb;
+      const desc=descs[i]||'';
+      const isActive=i===S.tab;
+      const hasUnread=i===msgTabIdx&&unread>0;
+      const delay=i*0.04;
+      return `<div class="nm-btn ${roleClass} ${isActive?'active-tab':''}"
+        style="animation-delay:${delay}s"
+        onclick="MC.menuGo(${i})">
+        <span class="nm-btn-icon">${icon}</span>
+        <div class="nm-btn-info">
+          <div class="nm-btn-name">${name}</div>
+          <div class="nm-btn-desc">${desc}</div>
+        </div>
+        ${isActive?`<span class="nm-btn-badge" style="background:${accentColor}22;color:${accentColor};border:1px solid ${accentColor}44">ACTIVE</span>`:''}
+        ${hasUnread?`<span class="nm-unread">${unread}</span>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  function openMenu(){
+    buildMenu();
+    document.getElementById('nav-menu').classList.add('open');
+  }
+
+  function closeMenu(){
+    document.getElementById('nav-menu').classList.remove('open');
+  }
+
+  function menuGo(i){
+    closeMenu();
+    setTab(i);
+  }
+
+  function menuSwitchRole(){
+    closeMenu();
+    setTimeout(()=>switchRole(),120);
+  }
+
+  function goHome(){
+    closeMenu();
+    // hide all app chrome
+    ['hdr','tabs','main','ftr'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display='none';
+    });
+    // reset state
+    S.role=null; S.tab=0;
+    // show role screen
+    document.getElementById('role-screen').style.display='flex';
+  }
+
+  return{go,switchRole,setTab,setLang,toggleVoice,sendMsg,attachFile,openFile,callAccept,callDecline,dAction,showPortfolio,closePortfolio,openMenu,closeMenu,menuGo,menuSwitchRole,goHome};
+})();
+</script>
+</body>
+</html>
